@@ -15,4 +15,9 @@ public class FixedPosition extends Position {
 	public void newline() {
 		// do nothing
 	}
+
+	@Override
+	public Position snapshot() {
+		return this;
+	}
 }

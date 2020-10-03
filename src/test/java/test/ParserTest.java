@@ -2,6 +2,7 @@ package test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.Collection;
 
@@ -12,6 +13,7 @@ import com.efsol.tagml.Node;
 import com.efsol.tagml.NodeVisitor;
 import com.efsol.tagml.TagmlDocument;
 import com.efsol.tagml.TagmlParser;
+import com.efsol.tagml.lex.Lexer;
 
 class CountVisitor implements NodeVisitor {
 	public int count = 0;
@@ -25,7 +27,7 @@ class CountVisitor implements NodeVisitor {
 
 class ParserTest {
 
-	void assertLayerCount(TagmlDocument doc, int expected) {
+	void assertLayerCount(int expected, TagmlDocument doc) {
 		Collection<Layer> layers = doc.getlayers();
 		assertEquals(expected, layers.size());
 	}
@@ -36,28 +38,30 @@ class ParserTest {
 		assertEquals(expected, visitor.count);
 	}
 
-	TagmlDocument parse(String input) {
+	TagmlDocument parse(String input) throws IOException {
 		TagmlParser parser = new TagmlParser();
 		StringReader reader = new StringReader(input);
 		return parser.parse(reader);
 	}
 
 	@Test
-	void testEmpty() {
+	void testEmpty() throws IOException {
 		TagmlDocument doc = parse("");
 
 		assertNotNull(doc);
-		assertLayerCount(doc, 1);
-		assertNodeCount(0, doc.getBaseLayer());
+		assertLayerCount(1, doc);
+		assertNodeCount(0, doc.getGlobalLayer());
 	}
 
 	@Test
-	void testPlain() {
+	void testPlainTextGlobal() throws IOException {
+		Lexer.verbose = true;
+		TagmlParser.verbose = true;
 		TagmlDocument doc = parse("John");
 
 		assertNotNull(doc);
-		assertLayerCount(doc, 1);
-		assertNodeCount(1, doc.getBaseLayer());
+//		assertLayerCount(2, doc); // global and base
+		assertNodeCount(1, doc.getGlobalLayer());
 	}
 
 }

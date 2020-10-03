@@ -6,11 +6,12 @@ import java.util.Map;
 
 public class TagmlDocument extends TagmlNode {
 	private Map<String, Layer> layers = new HashMap<>();
+	private Layer global;
 
 	public TagmlDocument() {
 		layers = new HashMap<>();
-		Layer base = new Layer(Layer.BASE_LAYER_NAME);
-		addLayer(base);
+		global = new Layer(Layer.GLOBAL_LAYER_NAME);
+		addLayer(global);
 	}
 
 	public void addLayer(Layer layer) {
@@ -21,9 +22,26 @@ public class TagmlDocument extends TagmlNode {
 		return layers.values();
 	}
 
-	public Layer getBaseLayer() {
-		// TODO Auto-generated method stub
-		return layers.get("_");
+	public void addNode(Node node) {
+		// all nodes added to global
+		global.add(node);
+
+		// then add to any other layers
+		for (Bead bead : node.getContext().values()) {
+			layers.get(bead.layer.name).add(node);
+		}
 	}
 
+	public Layer getGlobalLayer() {
+		return global;
+	}
+
+	public Layer getLayer(String name) {
+		return layers.get(name);
+	}
+
+	@Override
+	public String toString() {
+		return "DOC[nlayers=" + layers.size() + "]";
+	}
 }

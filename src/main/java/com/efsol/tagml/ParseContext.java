@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.efsol.tagml.lex.Lexer;
+
 public class ParseContext {
 	private Lexer lexer;
 	private Map<String, LayerContext> layers;

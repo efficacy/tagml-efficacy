@@ -10,11 +10,15 @@ public class Position {
 	}
 
 	public Position() {
-		this(1,1);
+		this(1,0);
 	}
 
 	public void step() {
 		++col;
+	}
+
+	public void cr() {
+		col = 1;
 	}
 
 	public void newline() {
