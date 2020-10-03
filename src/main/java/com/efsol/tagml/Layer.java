@@ -15,7 +15,7 @@ public class Layer {
 		Node p = first;
 		while (null != p) {
 			visitor.visit(p);
-			p = p.next(this);
+			p = p.next(name);
 		}
 	}
 }

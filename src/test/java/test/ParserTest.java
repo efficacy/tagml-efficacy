@@ -2,6 +2,7 @@ package test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.StringReader;
 import java.util.Collection;
 
 import org.junit.jupiter.api.Test;
@@ -35,10 +36,15 @@ class ParserTest {
 		assertEquals(expected, visitor.count);
 	}
 
+	TagmlDocument parse(String input) {
+		TagmlParser parser = new TagmlParser();
+		StringReader reader = new StringReader(input);
+		return parser.parse(reader);
+	}
+
 	@Test
 	void testEmpty() {
-		TagmlParser parser = new TagmlParser();
-		TagmlDocument doc = parser.parse("");
+		TagmlDocument doc = parse("");
 
 		assertNotNull(doc);
 		assertLayerCount(doc, 1);
@@ -47,8 +53,7 @@ class ParserTest {
 
 	@Test
 	void testPlain() {
-		TagmlParser parser = new TagmlParser();
-		TagmlDocument doc = parser.parse("John");
+		TagmlDocument doc = parse("John");
 
 		assertNotNull(doc);
 		assertLayerCount(doc, 1);
