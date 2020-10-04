@@ -9,13 +9,13 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import com.efsol.tagml.DocumentFilter;
 import com.efsol.tagml.Layer;
 import com.efsol.tagml.Node;
 import com.efsol.tagml.NodeVisitor;
 import com.efsol.tagml.Tag;
 import com.efsol.tagml.TagmlDocument;
 import com.efsol.tagml.TagmlParser;
-import com.efsol.tagml.lex.Lexer;
 
 class CountVisitor implements NodeVisitor {
 	public int count = 0;
@@ -63,13 +63,35 @@ class ParserTest {
 	void assertNodeHasTag(Node node, String layerName, String tagName) {
 		Map<String, Collection<Tag>> layers = node.getLayers();
 		Collection<Tag> layer = layers.get(layerName);
-		assertNotNull(layer, "can't findd tag " + tagName + " in missing layer " + layerName);
+		assertNotNull(layer, "can't find tag " + tagName + " in missing layer " + layerName);
 		for (Tag tag : layer) {
 			if (tagName.equals(tag.type)) {
 				return;
 			}
 		}
 		fail("tag " + tagName +" not found in layer " +layerName);
+	}
+
+	void assertPlainLayer(String expected, TagmlDocument document, String layerName) {
+		DocumentFilter filter = new DocumentFilter() {
+			@Override
+			public boolean accept(Node node) {
+				return node.getLayers().containsKey(layerName);
+			}
+		};
+		String text = document.spoolAsText(filter);
+		assertEquals(expected, text);
+	}
+
+	void assertAnnotatedLayer(String expected, TagmlDocument document, String layerName) {
+		DocumentFilter filter = new DocumentFilter() {
+			@Override
+			public boolean accept(Node node) {
+				return node.getLayers().containsKey(layerName);
+			}
+		};
+		String text = document.spoolAsMarkup(filter);
+		assertEquals(expected, text);
 	}
 
 	Node get(Layer layer, int index) {
@@ -113,9 +135,32 @@ class ParserTest {
 		assertNodeCount(1, global);
 		Node node = get(global,0);
 		assertNotNull(node);
-		System.out.println("final node=" + node);
 		assertEquals("John", node.getValue());
-//		assertNodeHasTag(node, Layer.BASE_LAYER_NAME, "A");
+		assertNodeHasTag(node, Layer.BASE_LAYER_NAME, "A");
+
+		assertPlainLayer("John", doc, Layer.BASE_LAYER_NAME);
+		assertPlainLayer("", doc, "X");
+
+		assertAnnotatedLayer("[A>John<A]", doc, Layer.BASE_LAYER_NAME);
+		assertAnnotatedLayer("", doc, "X");
+	}
+
+	@Test
+	void testOverlap() throws IOException {
+//		Lexer.verbose = true;
+//		TagmlParser.verbose = true;
+		TagmlDocument doc = parse("[A>John[B>Paul<A]George<B]");
+
+		assertNotNull(doc);
+		Layer global = doc.getGlobalLayer();
+//		global.dump();
+		assertNodeCount(3, global);
+
+		assertPlainLayer("JohnPaulGeorge", doc, Layer.BASE_LAYER_NAME);
+		assertPlainLayer("", doc, "X");
+
+		assertAnnotatedLayer("[A>John[B>Paul<A]George<B]", doc, Layer.BASE_LAYER_NAME);
+		assertAnnotatedLayer("", doc, "X");
 	}
 
 }

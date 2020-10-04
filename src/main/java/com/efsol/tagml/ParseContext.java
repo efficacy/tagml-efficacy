@@ -6,11 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.efsol.tagml.lex.CloseToken;
-import com.efsol.tagml.lex.Lexer;
-import com.efsol.tagml.lex.OpenToken;
-import com.efsol.tagml.lex.Token;
-
 public class ParseContext {
 	public static boolean verbose = false;
 	private Map<String, LayerContext> layers;
@@ -37,7 +32,7 @@ public class ParseContext {
 		if (null == context) {
 			throw new ParseException("attempt to add tag to unknown layer: " + layer, position);
 		}
-		Tag tag = new Tag(name, null, null);
+		Tag tag = new Tag(name, layer, null, null);
 		context.add(tag);
 		return tag;
 	}

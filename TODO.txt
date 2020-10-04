@@ -1,10 +1,9 @@
 Current
 =======
-single-layer with basic tags
+multi-layer
 
 Sooner
 ======
-multi-layer
 layer pause/resume
 optional tags
 singleton tags
@@ -25,3 +24,7 @@ Done
 ====
 2020-10-03 project setup
 2020-10-03 plain text
+2020-10-04 single-layer with basic tags
+2020-10-04 spool out plain text (filtered by layer)
+2020-10-04 spool out reconstituted text (filtered by layer)
+2020-10-04 overlapping tags

@@ -2,7 +2,11 @@ package com.efsol.tagml;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
+import com.efsol.util.Utils;
 
 public class TagmlDocument extends TagmlNode {
 	private Map<String, Layer> layers = new HashMap<>();
@@ -40,5 +44,58 @@ public class TagmlDocument extends TagmlNode {
 	@Override
 	public String toString() {
 		return "DOC[nlayers=" + layers.size() + "]";
+	}
+
+	public String spoolAsText(DocumentFilter filter) {
+		StringBuilder ret = new StringBuilder();
+		NodeCollector collector = new NodeCollector() {
+			@Override
+			public void collect(Node node) {
+				ret.append(node.getValue());
+			}
+		};
+		FilterVisitor visitor = new FilterVisitor(filter, collector);
+		global.walk(visitor);
+		return ret.toString();
+	}
+
+	private Set<Tag> mergeTags(Node node) {
+		Set<Tag> ret = new HashSet<>();
+		Map<String,Collection<Tag>> layers = node.getLayers();
+		for (String layer : layers.keySet()) {
+			Collection<Tag> tags = layers.get(layer);
+			for (Tag tag : tags) {
+				ret.add(tag);
+			}
+		}
+		return ret;
+	}
+
+	public String spoolAsMarkup(DocumentFilter filter) {
+		StringBuilder ret = new StringBuilder();
+		Set<Tag> runningContext = new HashSet<>();
+		NodeCollector collector = new NodeCollector() {
+			@Override
+			public void collect(Node node) {
+				Set<Tag> newContext = mergeTags(node);
+				Set<Tag> removes = Utils.difference(runningContext, newContext);
+				for (Tag tag : removes) {
+					ret.append(tag.asCloseMarkup());
+				}
+				Set<Tag> adds = Utils.difference(newContext, runningContext);
+				for (Tag tag : adds) {
+					ret.append(tag.asOpenMarkup());
+				}
+				ret.append(node.getValue());
+				runningContext.clear();
+				runningContext.addAll(newContext);
+			}
+		};
+		FilterVisitor visitor = new FilterVisitor(filter, collector);
+		global.walk(visitor);
+		for (Tag tag : runningContext) {
+			ret.append(tag.asCloseMarkup());
+		}
+		return ret.toString();
 	}
 }
