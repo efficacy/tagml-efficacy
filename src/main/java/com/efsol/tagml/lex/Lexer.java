@@ -5,6 +5,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.efsol.tagml.ParseException;
 import com.efsol.tagml.Position;
 
 public class Lexer {
@@ -15,7 +16,8 @@ public class Lexer {
 	private final int O_OR_S = 0x200;
 	private final int OS_LAYER = 0x300;
 	private final int C_OR_A = 0x400;
-	private final int CA_LAYER = 0x500;
+	private final int C_LAYER = 0x500;
+	private final int A_LAYER = 0x600;
 
 	/** character types **/
 	private final int OTHER = 0;
@@ -29,13 +31,12 @@ public class Lexer {
 	private final int QUERY = 8;
 	private final int WHITESPACE = 9;
 
-	private final int ESC_OFF = 0;
-	private final int ESC_ON = 0x1000;
-
 	private Reader input;
 	private Position position;
 	private boolean esc;
 	private int state;
+
+	TokenContext context = new TokenContext();
 
 	public Lexer(Reader input) {
 		this.input = input;
@@ -108,6 +109,7 @@ public class Lexer {
 
 	class TokenContext {
 		public TokenType type;
+		public Position position;
 		public StringBuilder value;
 		public Boolean optional;
 		public Boolean pause;
@@ -124,7 +126,9 @@ public class Lexer {
 		}
 
 		public void reset() {
+			System.out.println("TokenContext reset");
 			type = null;
+			position = null;
 			value.setLength(0);
 			name.setLength(0);
 			layer.setLength(0);
@@ -132,23 +136,29 @@ public class Lexer {
 			optional = null;
 			pause = null;
 		}
+
+		public void setPosition(Position position) {
+			System.out.println("TokenContext set position old=" + this.position + " new=" + position);
+			this.position = position;
+		}
 	}
 
 	private Token buildToken(TokenContext context) {
-		if (null == context.type) return null;
+		if (null == context.type)
+			return null;
 		Token ret = null;
 		switch (context.type) {
 		case NONE:
 			// return the null that is already there
 			break;
 		case TEXT:
-			ret = new TextToken(context.value.toString(), position);
+			ret = new TextToken(context.value.toString(), context.position);
 			break;
 		case OPEN:
-			// TODO
+			ret = new OpenToken(context.name.toString(), null, context.position);
 			break;
 		case CLOSE:
-			// TODO
+			ret = new CloseToken(context.name.toString(), null, context.position);
 			break;
 		case SINGLE:
 			// TODO
@@ -165,35 +175,87 @@ public class Lexer {
 
 	public Token next() throws IOException {
 		Token ret = null;
-		TokenContext context = new TokenContext();
 
-		for (int c = nextChar(); c != 0; c = nextChar()) {
-			int ctype = charType(c);
+		for (int i = nextChar(); i != 0; i = nextChar()) {
+			int ctype = charType(i);
+			char c = (char) i;
 //			log("state=" + state + " charType(" + (char)c + ")=" + ctype);
 			switch (state + ctype) {
+
+			// do nothing, ignore whitespace in tags
+			case O_OR_S + WHITESPACE:
+			case C_OR_A + WHITESPACE:
+			case OS_LAYER + WHITESPACE:
+			case C_LAYER + WHITESPACE:
+			case A_LAYER + WHITESPACE:
+				break;
+
+			// accumulate text outside tags
 			case OUT + OTHER:
 			case OUT + WHITESPACE:
 			case OUT + VBAR:
 			case OUT + PLUS:
 			case OUT + MINUS:
 			case OUT + QUERY:
-				context.type = TokenType.TEXT;
-				context.value.append((char) c);
+			case OUT + CLOSE_SQ:
+			case OUT + CLOSE_ANG:
+				if (null == context.type) {
+					context.type = TokenType.TEXT;
+					context.setPosition(position.snapshot());
+					log("starting text at " + context.position);
+				}
+				context.value.append(c);
 //				log(" token type=" + context.type + " appended(" + (char)c + ") value=" + context.value);
 				break;
+
 			case OUT + OPEN_SQ:
-				ret = buildToken(context);
+				ret = buildToken(context); // flush any pending text
+			context.setPosition(position.snapshot());
 				state = O_OR_S;
 				break;
 			case OUT + OPEN_ANG:
+				ret = buildToken(context); // flush any pending text
+			context.setPosition(position.snapshot());
+				System.out.println("entering close or alt, context pos=" + context.position);
 				state = C_OR_A;
 				break;
-			case O_OR_S + OTHER:
 
+			case O_OR_S + CLOSE_ANG:
+				context.type = TokenType.OPEN;
+				ret = buildToken(context); // build the open tag
+				state = OUT;
+				break;
+			case C_OR_A + CLOSE_SQ:
+				context.type = TokenType.CLOSE;
+			System.out.println("building close token, context pos=" + context.position);
+				ret = buildToken(context); // build the close tag
+				state = OUT;
+				break;
+			case O_OR_S + OTHER:
+				context.name.append(c);
+				break;
+			case C_OR_A + OTHER:
+				if (null == context.type) {
+					context.type = TokenType.CLOSE;
+				}
+				context.name.append(c);
+				break;
+			case C_OR_A + VBAR:
+				if (null == context.type) {
+					context.type = TokenType.ALT;
+					state = A_LAYER;
+				} else {
+					state = C_LAYER;
+				}
+				break;
+
+				default:
+					throw new ParseException("unexpected character " + c + " in state " + state, position);
 			}
 			log("nextToken after loop ret=" + ret);
 			// if we constructed a non-empty token, return it
-			if (null != ret && !ret.isEmpty()) break;
+			if (null != ret && !ret.isEmpty())
+				break;
 		}
 
 		// deal with possible trailing or unclosed text
@@ -206,6 +268,7 @@ public class Lexer {
 	}
 
 	void log(String s) {
-		if (verbose) System.out.println(s);
+		if (verbose)
+			System.out.println(s);
 	}
 }

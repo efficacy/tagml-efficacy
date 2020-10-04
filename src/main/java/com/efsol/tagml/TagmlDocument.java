@@ -11,7 +11,7 @@ public class TagmlDocument extends TagmlNode {
 	public TagmlDocument() {
 		layers = new HashMap<>();
 		global = new Layer(Layer.GLOBAL_LAYER_NAME);
-		addLayer(global);
+		addLayer(new Layer(Layer.BASE_LAYER_NAME));
 	}
 
 	public void addLayer(Layer layer) {
@@ -23,12 +23,9 @@ public class TagmlDocument extends TagmlNode {
 	}
 
 	public void addNode(Node node) {
-		// all nodes added to global
-		global.add(node);
-
-		// then add to any other layers
-		for (Bead bead : node.getContext().values()) {
-			layers.get(bead.layer.name).add(node);
+		if (null != node) {
+			// all nodes added to global
+			global.add(node);
 		}
 	}
 

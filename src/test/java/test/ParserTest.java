@@ -55,13 +55,22 @@ class ParserTest {
 
 	@Test
 	void testPlainTextGlobal() throws IOException {
-		Lexer.verbose = true;
-		TagmlParser.verbose = true;
 		TagmlDocument doc = parse("John");
 
 		assertNotNull(doc);
-//		assertLayerCount(2, doc); // global and base
 		assertNodeCount(1, doc.getGlobalLayer());
+	}
+
+	@Test
+	void testStartEnd() throws IOException {
+//		Lexer.verbose = true;
+		TagmlParser.verbose = true;
+		TagmlDocument doc = parse("[A>John<A]");
+
+		assertNotNull(doc);
+		Layer global = doc.getGlobalLayer();
+		global.dump();
+		assertNodeCount(1, global);
 	}
 
 }

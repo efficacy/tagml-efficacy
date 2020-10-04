@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.ListIterator;
 
 public class LayerContext {
+	private String name;
 	private List<Tag> tags;
 
-	public LayerContext() {
+	public LayerContext(String name) {
+		this.name = name;
 		this.tags = new LinkedList<>();
 	}
 
@@ -35,5 +37,9 @@ public class LayerContext {
 			}
 		}
 		return found;
+	}
+
+	public String getName() {
+		return name;
 	}
 }

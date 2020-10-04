@@ -9,6 +9,7 @@ public abstract class AbstractToken implements Token {
 	public AbstractToken(TokenType type, Position position) {
 		this.type = type;
 		this.position = position;
+		System.out.println("creating Token(" + type + ") at " + position);
 	}
 
 	@Override

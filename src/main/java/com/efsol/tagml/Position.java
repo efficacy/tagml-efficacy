@@ -15,6 +15,7 @@ public class Position {
 
 	public void step() {
 		++col;
+//		System.out.println("position, stepped to " + this);
 	}
 
 	public void cr() {
@@ -28,5 +29,10 @@ public class Position {
 
 	public Position snapshot() {
 		return new FixedPosition(row, col);
+	}
+
+	@Override
+	public String toString() {
+		return "(" + row + "," + col + ")";
 	}
 }

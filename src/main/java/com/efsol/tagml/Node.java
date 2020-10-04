@@ -1,38 +1,32 @@
 package com.efsol.tagml;
 
-import java.util.Map;
+import java.util.Collection;
 
 public class Node {
-	private String value;
-	private Map<String, Bead> context;
-	private Position position;
+	private final String value;
+	private final Position position;
+	private final Collection<String> layers;
 
-	public Node(String value, Map<String, Bead> context, Position position) {
+	public Node(String value, Position position, Collection<String> layers) {
 		this.value = value;
-		this.context = context;
 		this.position = position;
+		this.layers = layers;
 	}
 
 	public String getValue() {
 		return value;
 	}
 
-	public Node next(String layer) {
-		Bead bead = context.get(layer);
-		if (null == bead) return null;
-		return bead.next;
-	}
-
 	public Position getPosition() {
 		return position;
 	}
 
-	@Override
-	public String toString() {
-		return "Node[" + value + " at (" + position.row + "," + position.col + ")]";
+	public Collection<String> getLayers() {
+		return layers;
 	}
 
-	public Map<String, Bead> getContext() {
-		return context;
+	@Override
+	public String toString() {
+		return "Node(" + value + ")" + layers + " at " + position;
 	}
 }

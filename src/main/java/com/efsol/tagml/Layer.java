@@ -26,4 +26,16 @@ public class Layer {
 			}
 		}
 	}
+
+	public void dump() {
+		System.out.println("Layer " + name);
+		walk(new NodeVisitor() {
+			@Override
+			public boolean visit(Node node) {
+				System.out.println(" " + node);
+				return true;
+			}
+
+		});
+	}
 }

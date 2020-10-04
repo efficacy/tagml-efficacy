@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.Reader;
 
 import com.efsol.tagml.lex.Token;
+import com.efsol.tagml.lex.CloseToken;
 import com.efsol.tagml.lex.Lexer;
+import com.efsol.tagml.lex.OpenToken;
 import com.efsol.tagml.lex.TextToken;
 
 public class TagmlParser {
@@ -16,7 +18,8 @@ public class TagmlParser {
 
 	public TagmlDocument parse(Lexer lexer) throws IOException {
 		TagmlDocument ret = new TagmlDocument();
-		NodeBuffer buffer = new NodeBuffer(lexer.getPosition());
+		ParseContext context = new ParseContext(ret);
+
 		for(;;) {
 			Token token = lexer.next();
 			log("Parser: got token: " + token);
@@ -30,31 +33,44 @@ public class TagmlParser {
 				break;
 			case TEXT:
 				log("Parser: it's a text token: " + token);
-				buffer.append(((TextToken)token).getText());
+				context.append(((TextToken)token).getText());
+				context.setPosition(token.getPosition());
 				break;
 			case OPEN:
-				ret.addNode(buffer.swap(lexer.getPosition()));
-				// TODO update tag/layer context
+				log("Parser: it's an open token: " + token);
+				// aggregate any pending text nodes
+				ret.addNode(context.swap());
+				OpenToken ot = (OpenToken)token;
+				context.addTag(ot.getName(), null, ot.getPosition());
+				// TODO update layer context
 				break;
 			case CLOSE:
-				ret.addNode(buffer.swap(lexer.getPosition()));
-				// TODO update tag/layer context
+				log("Parser: it's a close token: " + token);
+				// aggregate any pending text nodes
+				ret.addNode(context.swap());
+				CloseToken ct = (CloseToken)token;
+				context.removeTag(ct.getName(), null, ct.getPosition());
+				// TODO update layer context
 				break;
 			case SINGLE:
-				ret.addNode(buffer.swap(lexer.getPosition()));
+				log("Parser: it's a singleton token: " + token);
+				// aggregate any pending text nodes
+				ret.addNode(context.swap());
 				// TODO create and save a meta node
 				break;
 			case ALT:
-				ret.addNode(buffer.swap(lexer.getPosition()));
+				log("Parser: it's an alternative token: " + token);
+				// aggregate any pending text nodes
+				ret.addNode(context.swap());
 				// TODO create and save a meta node
 				break;
 			}
 		}
 
-		if (buffer.isIncomplete()) {
+		if (context.isIncomplete()) {
 			log("at end, buffer is incomplete");
-			Node node = buffer.swap(lexer.getPosition());
-			log("created incomplete node: " + node);
+			Node node = context.swap();
+			log("completed incomplete node: " + node);
 			ret.addNode(node);
 		}
 		log("Parser returning: " + ret);

@@ -20,6 +20,6 @@ public class TextToken extends AbstractToken {
 	}
 
 	@Override public String toString() {
-		return "TEXT[" + text + "]";
+		return "TEXT[" + text + "] at " + getPosition();
 	}
 }
