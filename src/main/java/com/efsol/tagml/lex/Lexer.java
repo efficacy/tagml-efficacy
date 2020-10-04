@@ -126,7 +126,6 @@ public class Lexer {
 		}
 
 		public void reset() {
-			System.out.println("TokenContext reset");
 			type = null;
 			position = null;
 			value.setLength(0);
@@ -138,7 +137,6 @@ public class Lexer {
 		}
 
 		public void setPosition(Position position) {
-			System.out.println("TokenContext set position old=" + this.position + " new=" + position);
 			this.position = position;
 		}
 	}
@@ -202,7 +200,7 @@ public class Lexer {
 				if (null == context.type) {
 					context.type = TokenType.TEXT;
 					context.setPosition(position.snapshot());
-					log("starting text at " + context.position);
+//					log("starting text at " + context.position);
 				}
 				context.value.append(c);
 //				log(" token type=" + context.type + " appended(" + (char)c + ") value=" + context.value);
@@ -216,7 +214,7 @@ public class Lexer {
 			case OUT + OPEN_ANG:
 				ret = buildToken(context); // flush any pending text
 			context.setPosition(position.snapshot());
-				System.out.println("entering close or alt, context pos=" + context.position);
+//				log("entering close or alt, context pos=" + context.position);
 				state = C_OR_A;
 				break;
 
@@ -227,7 +225,7 @@ public class Lexer {
 				break;
 			case C_OR_A + CLOSE_SQ:
 				context.type = TokenType.CLOSE;
-			System.out.println("building close token, context pos=" + context.position);
+//			log("building close token, context pos=" + context.position);
 				ret = buildToken(context); // build the close tag
 				state = OUT;
 				break;
@@ -252,7 +250,7 @@ public class Lexer {
 				default:
 					throw new ParseException("unexpected character " + c + " in state " + state, position);
 			}
-			log("nextToken after loop ret=" + ret);
+//			log("nextToken after loop ret=" + ret);
 			// if we constructed a non-empty token, return it
 			if (null != ret && !ret.isEmpty())
 				break;
@@ -261,7 +259,7 @@ public class Lexer {
 		// deal with possible trailing or unclosed text
 		if (null == ret) {
 			ret = buildToken(context);
-			log("created trailing token: " + ret);
+//			log("created trailing token: " + ret);
 		}
 		log("lexer returning: " + ret);
 		return ret;

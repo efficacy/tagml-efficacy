@@ -28,7 +28,7 @@ public class Layer {
 	}
 
 	public void dump() {
-		System.out.println("Layer " + name);
+		System.out.println("Dump Layer " + name);
 		walk(new NodeVisitor() {
 			@Override
 			public boolean visit(Node node) {

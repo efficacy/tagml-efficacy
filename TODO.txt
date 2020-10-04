@@ -1,0 +1,27 @@
+Current
+=======
+single-layer with basic tags
+
+Sooner
+======
+multi-layer
+layer pause/resume
+optional tags
+singleton tags
+alternates
+
+Later
+=====
+namespaces
+annontations
+
+Maybe
+=====
+
+Never
+=====
+
+Done
+====
+2020-10-03 project setup
+2020-10-03 plain text

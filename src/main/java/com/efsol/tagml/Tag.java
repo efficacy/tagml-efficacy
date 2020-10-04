@@ -10,4 +10,9 @@ public class Tag {
 		this.namespace = namespace;
 		this.annotation = annotation;
 	}
+
+	@Override
+	public String toString() {
+		return "Tag(" + type + ") ns=" + namespace + " an=" + annotation;
+	}
 }

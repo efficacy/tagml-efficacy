@@ -1,7 +1,9 @@
 package com.efsol.tagml;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.efsol.tagml.lex.CloseToken;
@@ -10,6 +12,7 @@ import com.efsol.tagml.lex.OpenToken;
 import com.efsol.tagml.lex.Token;
 
 public class ParseContext {
+	public static boolean verbose = false;
 	private Map<String, LayerContext> layers;
 	private StringBuilder buffer;
 	private Position position;
@@ -29,6 +32,7 @@ public class ParseContext {
 
 	public Tag addTag(String name, String layer, Position position) {
 		if (null == layer) layer = Layer.BASE_LAYER_NAME;
+		log("addTag(" + name + "," + layer + ") at " + position);
 		LayerContext context = layers.get(layer);
 		if (null == context) {
 			throw new ParseException("attempt to add tag to unknown layer: " + layer, position);
@@ -40,6 +44,7 @@ public class ParseContext {
 
 	public Tag removeTag(String name, String layer, Position position) {
 		if (null == layer) layer = Layer.BASE_LAYER_NAME;
+		log("removeTag(" + name + "," + layer + ") at " + position);
 		LayerContext context = layers.get(layer);
 		if (null == context) {
 			throw new ParseException("attempt to remove tag from unknown layer: " + layer, position);
@@ -51,27 +56,28 @@ public class ParseContext {
 		return tag;
 	}
 
-	public void joinLayer(String name) {
-		// TODO
-	}
-
-	public void leaveLayer(String name) {
-		// TODO
-	}
-
 	public void append(String text) {
 		this.buffer.append(text);
 	}
 
 	public Node swap() {
-		System.out.println("ParseContext.swap pos=" + position);
+		log("swap pos=" + position);
 		Node ret = null;
 		if (buffer.length() > 0) {
 			String text = buffer.toString();
 			buffer.setLength(0);
-			ret = new Node(text, position, null);
+			Map<String, Collection<Tag>> nodeLayers = new HashMap<>();
+			for (String layerName : this.layers.keySet()) {
+				List<Tag> layer = new ArrayList<>();
+				for (Tag tag : this.layers.get(layerName).getTags()) {
+					layer.add(tag);
+				}
+				nodeLayers.put(layerName, layer);
+			}
+			ret = new Node(text, position, nodeLayers);
 		}
 		this.position = null;
+		log("swap returning " + ret);
 		return ret;
 	}
 
@@ -80,9 +86,18 @@ public class ParseContext {
 	}
 
 	public void setPosition(Position position) {
-		System.out.println("setPosition old=" + this.position + " new=" + position);
+		log("setPosition old=" + this.position + " new=" + position);
 		if (null == this.position) {
 			this.position = position;
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "ParseContext(" + buffer.toString() + ") " + layers + " at " + position;
+	}
+
+	void log(String s) {
+		if (verbose) System.out.println("ParseContext::" + s);
 	}
 }

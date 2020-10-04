@@ -1,5 +1,6 @@
 package com.efsol.tagml;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -41,5 +42,14 @@ public class LayerContext {
 
 	public String getName() {
 		return name;
+	}
+
+	public Collection<Tag> getTags() {
+		return tags;
+	}
+
+	@Override
+	public String toString() {
+		return "LayerContext(" + name + ")=" + tags;
 	}
 }

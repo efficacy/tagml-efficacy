@@ -22,7 +22,7 @@ public class TagmlParser {
 
 		for(;;) {
 			Token token = lexer.next();
-			log("Parser: got token: " + token);
+			log("Parser: got lexer token: " + token);
 			if (null == token) {
 				break;
 			}
@@ -39,18 +39,22 @@ public class TagmlParser {
 			case OPEN:
 				log("Parser: it's an open token: " + token);
 				// aggregate any pending text nodes
+				log("pending text node ctx=" + context);
 				ret.addNode(context.swap());
 				OpenToken ot = (OpenToken)token;
 				context.addTag(ot.getName(), null, ot.getPosition());
 				// TODO update layer context
+				log("after open tag ctx=" + context);
 				break;
 			case CLOSE:
 				log("Parser: it's a close token: " + token);
 				// aggregate any pending text nodes
+				log("pending text node ctx=" + context);
 				ret.addNode(context.swap());
 				CloseToken ct = (CloseToken)token;
 				context.removeTag(ct.getName(), null, ct.getPosition());
 				// TODO update layer context
+				log("after close tag ctx=" + context);
 				break;
 			case SINGLE:
 				log("Parser: it's a singleton token: " + token);
@@ -78,6 +82,6 @@ public class TagmlParser {
 	}
 
 	void log(String s) {
-		if (verbose) System.out.println(s);
+		if (verbose) System.out.println("Parser::" + s);
 	}
 }

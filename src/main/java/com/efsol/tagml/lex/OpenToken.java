@@ -23,7 +23,7 @@ public class OpenToken extends AbstractToken {
 	}
 
 	@Override public String toString() {
-		return "OPEN[" + name + "] at " + getPosition();
+		return "OPEN[" + name + "," + layer + "] at " + getPosition();
 	}
 
 	public String getLayer() {

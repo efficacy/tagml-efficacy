@@ -23,7 +23,7 @@ public class CloseToken extends AbstractToken {
 	}
 
 	@Override public String toString() {
-		return "CLOSE[" + name + "] at " + getPosition();
+		return "CLOSE[" + name + "," + layer + "] at " + getPosition();
 	}
 
 	public String getLayer() {
