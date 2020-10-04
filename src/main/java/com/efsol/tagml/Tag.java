@@ -30,7 +30,10 @@ public class Tag {
 	}
 
 	@Override public int hashCode() {
-		int ret = type.hashCode() + layer.hashCode();
+		int ret = type.hashCode();
+		if (null != layer) {
+			ret += layer.hashCode();;
+		}
 		if (null != namespace) {
 			ret += namespace.hashCode();
 		}
@@ -43,7 +46,7 @@ public class Tag {
 	public Object asOpenMarkup() {
 		StringBuilder ret = new StringBuilder("[");
 		ret.append(type);
-		if (!layer.equals(Layer.BASE_LAYER_NAME)) {
+		if (null != layer) {
 			ret.append("|");
 			ret.append(layer);
 		}
@@ -55,7 +58,7 @@ public class Tag {
 	public Object asCloseMarkup() {
 		StringBuilder ret = new StringBuilder("<");
 		ret.append(type);
-		if (!layer.equals(Layer.BASE_LAYER_NAME)) {
+		if (null != layer) {
 			ret.append("|");
 			ret.append(layer);
 		}

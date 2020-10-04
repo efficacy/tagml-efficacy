@@ -15,7 +15,6 @@ public class TagmlDocument extends TagmlNode {
 	public TagmlDocument() {
 		layers = new HashMap<>();
 		global = new Layer(Layer.GLOBAL_LAYER_NAME);
-		addLayer(new Layer(Layer.BASE_LAYER_NAME));
 	}
 
 	public void addLayer(Layer layer) {
@@ -27,6 +26,7 @@ public class TagmlDocument extends TagmlNode {
 	}
 
 	public void addNode(Node node) {
+//		System.out.println("document add node " + node);
 		if (null != node) {
 			// all nodes added to global
 			global.add(node);
@@ -59,13 +59,15 @@ public class TagmlDocument extends TagmlNode {
 		return ret.toString();
 	}
 
-	private Set<Tag> mergeTags(Node node) {
+	private Set<Tag> mergeTags(Node node, DocumentFilter filter) {
 		Set<Tag> ret = new HashSet<>();
-		Map<String,Collection<Tag>> layers = node.getLayers();
+		Map<String, Collection<Tag>> layers = node.getLayers();
 		for (String layer : layers.keySet()) {
-			Collection<Tag> tags = layers.get(layer);
-			for (Tag tag : tags) {
-				ret.add(tag);
+			if (filter.acceptLayer(layer)) {
+				Collection<Tag> tags = layers.get(layer);
+				for (Tag tag : tags) {
+					ret.add(tag);
+				}
 			}
 		}
 		return ret;
@@ -77,7 +79,7 @@ public class TagmlDocument extends TagmlNode {
 		NodeCollector collector = new NodeCollector() {
 			@Override
 			public void collect(Node node) {
-				Set<Tag> newContext = mergeTags(node);
+				Set<Tag> newContext = mergeTags(node, filter);
 				Set<Tag> removes = Utils.difference(runningContext, newContext);
 				for (Tag tag : removes) {
 					ret.append(tag.asCloseMarkup());

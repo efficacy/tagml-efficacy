@@ -52,4 +52,8 @@ public class LayerContext {
 	public String toString() {
 		return "LayerContext(" + name + ")=" + tags;
 	}
+
+	public boolean isEmpty() {
+		return tags.isEmpty();
+	}
 }

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Layer {
-	public static final String BASE_LAYER_NAME = "_";
 	public static final String GLOBAL_LAYER_NAME = "$";
 
 	public final String name;

@@ -13,9 +13,12 @@ import com.efsol.tagml.DocumentFilter;
 import com.efsol.tagml.Layer;
 import com.efsol.tagml.Node;
 import com.efsol.tagml.NodeVisitor;
+import com.efsol.tagml.ParseContext;
 import com.efsol.tagml.Tag;
 import com.efsol.tagml.TagmlDocument;
 import com.efsol.tagml.TagmlParser;
+import com.efsol.tagml.lex.Lexer;
+import com.efsol.util.Utils;
 
 class CountVisitor implements NodeVisitor {
 	public int count = 0;
@@ -72,25 +75,34 @@ class ParserTest {
 		fail("tag " + tagName +" not found in layer " +layerName);
 	}
 
+	class SingleLayerFilter implements DocumentFilter {
+		private final String layerName;
+
+		public SingleLayerFilter(String layerName) {
+			this.layerName = layerName;
+		}
+
+		@Override
+		public boolean accept(Node node) {
+//			System.out.println("SingleLayerFilter.accept(" + layerName + ") considering " + node);
+			Map<String, Collection<Tag>> layers = node.getLayers();
+			return (null == layerName && layers.isEmpty()) || layers.containsKey(layerName);
+		}
+
+		@Override
+		public boolean acceptLayer(String layer) {
+//			System.out.println("SingleLayerFilter.acceptlayer(" + layerName + ") considering " + layer);
+			return Utils.same(layer, layerName);
+		}
+	}
+
 	void assertPlainLayer(String expected, TagmlDocument document, String layerName) {
-		DocumentFilter filter = new DocumentFilter() {
-			@Override
-			public boolean accept(Node node) {
-				return node.getLayers().containsKey(layerName);
-			}
-		};
-		String text = document.spoolAsText(filter);
+		String text = document.spoolAsText(new SingleLayerFilter(layerName));
 		assertEquals(expected, text);
 	}
 
 	void assertAnnotatedLayer(String expected, TagmlDocument document, String layerName) {
-		DocumentFilter filter = new DocumentFilter() {
-			@Override
-			public boolean accept(Node node) {
-				return node.getLayers().containsKey(layerName);
-			}
-		};
-		String text = document.spoolAsMarkup(filter);
+		String text = document.spoolAsMarkup(new SingleLayerFilter(layerName));
 		assertEquals(expected, text);
 	}
 
@@ -111,7 +123,7 @@ class ParserTest {
 		TagmlDocument doc = parse("");
 
 		assertNotNull(doc);
-		assertLayerCount(1, doc);
+		assertLayerCount(0, doc);
 		assertNodeCount(0, doc.getGlobalLayer());
 	}
 
@@ -125,8 +137,9 @@ class ParserTest {
 
 	@Test
 	void testStartEnd() throws IOException {
-//		Lexer.verbose = true;
-//		TagmlParser.verbose = true;
+		Lexer.verbose = false;
+		TagmlParser.verbose = false;
+		ParseContext.verbose = false;
 		TagmlDocument doc = parse("[A>John<A]");
 
 		assertNotNull(doc);
@@ -136,31 +149,42 @@ class ParserTest {
 		Node node = get(global,0);
 		assertNotNull(node);
 		assertEquals("John", node.getValue());
-		assertNodeHasTag(node, Layer.BASE_LAYER_NAME, "A");
+		assertNodeHasTag(node, null, "A");
 
-		assertPlainLayer("John", doc, Layer.BASE_LAYER_NAME);
+		assertPlainLayer("John", doc, null);
 		assertPlainLayer("", doc, "X");
 
-		assertAnnotatedLayer("[A>John<A]", doc, Layer.BASE_LAYER_NAME);
+		assertAnnotatedLayer("[A>John<A]", doc, null);
 		assertAnnotatedLayer("", doc, "X");
 	}
 
 	@Test
 	void testOverlap() throws IOException {
-//		Lexer.verbose = true;
-//		TagmlParser.verbose = true;
-		TagmlDocument doc = parse("[A>John[B>Paul<A]George<B]");
+		TagmlDocument doc = parse("Stuart[A>John[B>Paul<A]George<B]Ringo");
 
 		assertNotNull(doc);
 		Layer global = doc.getGlobalLayer();
-//		global.dump();
-		assertNodeCount(3, global);
+		assertNodeCount(5, global);
 
-		assertPlainLayer("JohnPaulGeorge", doc, Layer.BASE_LAYER_NAME);
+		assertPlainLayer("StuartJohnPaulGeorgeRingo", doc, null);
 		assertPlainLayer("", doc, "X");
 
-		assertAnnotatedLayer("[A>John[B>Paul<A]George<B]", doc, Layer.BASE_LAYER_NAME);
+		assertAnnotatedLayer("Stuart[A>John[B>Paul<A]George<B]Ringo", doc, null);
 		assertAnnotatedLayer("", doc, "X");
 	}
 
+	@Test
+	void testLayers() throws IOException {
+		TagmlDocument doc = parse("Stuart[A|+f>John[B>Paul<A|f]George<B]Ringo");
+
+		assertNotNull(doc);
+		Layer global = doc.getGlobalLayer();
+		assertNodeCount(5, global);
+
+		assertPlainLayer("JohnPaul", doc, "f");
+		assertPlainLayer("StuartPaulGeorgeRingo", doc, null);
+
+		assertAnnotatedLayer("[A|f>JohnPaul<A|f]", doc, "f");
+		assertAnnotatedLayer("Stuart[B>PaulGeorge<B]Ringo", doc, null);
+	}
 }

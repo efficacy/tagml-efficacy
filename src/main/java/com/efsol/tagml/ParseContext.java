@@ -17,6 +17,8 @@ public class ParseContext {
 		this.buffer = new StringBuilder();
 		this.position = null;
 		for (Layer layer: doc.getlayers()) {
+			log("added initial layer");
+			layer.dump();
 			layers.put(layer.name, new LayerContext(layer.name));
 		}
 	}
@@ -26,19 +28,19 @@ public class ParseContext {
 	}
 
 	public Tag addTag(String name, String layer, Position position) {
-		if (null == layer) layer = Layer.BASE_LAYER_NAME;
 		log("addTag(" + name + "," + layer + ") at " + position);
 		LayerContext context = layers.get(layer);
-		if (null == context) {
-			throw new ParseException("attempt to add tag to unknown layer: " + layer, position);
+		if (null == context) { // Auto-Create layers for now
+			context = new LayerContext(layer);
+			layers.put(layer, context);
+//			throw new ParseException("attempt to add tag to unknown layer: " + layer, position);
 		}
 		Tag tag = new Tag(name, layer, null, null);
 		context.add(tag);
 		return tag;
 	}
 
-	public Tag removeTag(String name, String layer, Position position) {
-		if (null == layer) layer = Layer.BASE_LAYER_NAME;
+	public Tag removeTag(String name, String layer, Position position) throws ParseException {
 		log("removeTag(" + name + "," + layer + ") at " + position);
 		LayerContext context = layers.get(layer);
 		if (null == context) {
@@ -46,7 +48,11 @@ public class ParseContext {
 		}
 		Tag tag = context.removeTag(name);
 		if (null == tag) {
+			System.out.println("removeTag(" + name +") layer=" + layer + " pos=" + position);
 			throw new ParseException("attempt to close tag " + name + " not known on layer: " + layer, position);
+		}
+		if (context.isEmpty()) {
+			layers.remove(layer);
 		}
 		return tag;
 	}
