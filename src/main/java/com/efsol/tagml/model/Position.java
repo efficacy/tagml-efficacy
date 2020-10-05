@@ -1,4 +1,4 @@
-package com.efsol.tagml;
+package com.efsol.tagml.model;
 
 public class Position {
 	public int row;
@@ -15,7 +15,6 @@ public class Position {
 
 	public void step() {
 		++col;
-//		System.out.println("position, stepped to " + this);
 	}
 
 	public void cr() {

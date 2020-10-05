@@ -1,7 +1,6 @@
-package com.efsol.tagml;
+package com.efsol.tagml.model;
 
 public class FixedPosition extends Position {
-
 	public FixedPosition(int row, int col) {
 		super(row, col);
 	}

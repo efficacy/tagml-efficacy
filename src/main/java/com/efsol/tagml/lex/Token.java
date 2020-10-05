@@ -1,6 +1,6 @@
 package com.efsol.tagml.lex;
 
-import com.efsol.tagml.Position;
+import com.efsol.tagml.model.Position;
 
 public interface Token {
 	TokenType getType();

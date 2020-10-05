@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
+import com.efsol.tagml.model.Tag;
+
 public class LayerContext {
 	private String name;
 	private List<Tag> tags;
@@ -32,7 +34,7 @@ public class LayerContext {
 		ListIterator<Tag> li = tags.listIterator(tags.size());
 		while (li.hasPrevious()) {
 			Tag tag = li.previous();
-			if (tag.type.equals(type)) {
+			if (tag.name.equals(type)) {
 				found = tag;
 				break;
 			}

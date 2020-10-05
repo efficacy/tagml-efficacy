@@ -1,8 +1,6 @@
 Current
 =======
-separate model from parser
-clean model api
-directed graph model
+bug: chunk iterator not working?
 
 Sooner
 ======
@@ -33,3 +31,6 @@ Done
 2020-10-04 spool out reconstituted text (filtered by layer)
 2020-10-04 overlapping tags
 2020-10-04 multi-layer
+2020-10-05 separate model from parser
+2020-10-05 clean model api
+2020-10-05 directed graph model

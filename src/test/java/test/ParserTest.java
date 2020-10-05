@@ -1,61 +1,59 @@
 package test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Collection;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import com.efsol.tagml.DocumentFilter;
-import com.efsol.tagml.Layer;
-import com.efsol.tagml.Node;
-import com.efsol.tagml.NodeVisitor;
 import com.efsol.tagml.ParseContext;
-import com.efsol.tagml.Tag;
-import com.efsol.tagml.TagmlDocument;
-import com.efsol.tagml.TagmlParser;
+import com.efsol.tagml.Parser;
 import com.efsol.tagml.lex.Lexer;
+import com.efsol.tagml.markup.Markup;
+import com.efsol.tagml.model.Chunk;
+import com.efsol.tagml.model.ChunkVisitor;
+import com.efsol.tagml.model.Document;
+import com.efsol.tagml.model.DocumentFactory;
+import com.efsol.tagml.model.DocumentFilter;
+import com.efsol.tagml.model.Layer;
+import com.efsol.tagml.model.Node;
+import com.efsol.tagml.model.Tag;
+import com.efsol.tagml.model.dag.DagFactory;
 import com.efsol.util.Utils;
 
-class CountVisitor implements NodeVisitor {
+class CountVisitor implements ChunkVisitor {
 	public int count = 0;
 
 	@Override
-	public boolean visit(Node node) {
+	public Object visit(Chunk chunk) {
 		++count;
-		return true;
+		return null;
 	}
 }
 
-class GetVisitor implements NodeVisitor {
+class GetVisitor implements ChunkVisitor {
 	private int target;
 	public int count = 0;
-	public Node found;
 
 	public GetVisitor(int target) {
 		this.target = target;
 	}
 
 	@Override
-	public boolean visit(Node node) {
+	public Object visit(Chunk chunk) {
 		if (count == target) {
-			found = node;
-			return false;
+			return chunk;
 		}
 		++count;
-		return true;
+		return null;
 	}
 }
 
 class ParserTest {
-
-	void assertLayerCount(int expected, TagmlDocument doc) {
-		Collection<Layer> layers = doc.getlayers();
-		assertEquals(expected, layers.size());
-	}
 
 	void assertNodeCount(int expected, Layer layer) {
 		CountVisitor visitor = new CountVisitor();
@@ -63,12 +61,12 @@ class ParserTest {
 		assertEquals(expected, visitor.count);
 	}
 
-	void assertNodeHasTag(Node node, String layerName, String tagName) {
-		Map<String, Collection<Tag>> layers = node.getLayers();
-		Collection<Tag> layer = layers.get(layerName);
-		assertNotNull(layer, "can't find tag " + tagName + " in missing layer " + layerName);
-		for (Tag tag : layer) {
-			if (tagName.equals(tag.type)) {
+	void assertChunkHasTag(Chunk chunk, String layerName, String tagName) {
+		Map<String, Node> layers = chunk.getLayers();
+		Node node = layers.get(layerName);
+		assertNotNull(node, "can't find tag " + tagName + " in layer " + layerName + " " + layers);
+		for (Tag tag : node.getTags()) {
+			if (tagName.equals(tag.name)) {
 				return;
 			}
 		}
@@ -83,53 +81,54 @@ class ParserTest {
 		}
 
 		@Override
-		public boolean accept(Node node) {
-//			System.out.println("SingleLayerFilter.accept(" + layerName + ") considering " + node);
-			Map<String, Collection<Tag>> layers = node.getLayers();
-			return (null == layerName && layers.isEmpty()) || layers.containsKey(layerName);
+		public boolean accept(Chunk chunk) {
+			return chunk.isOnLayer(layerName);
 		}
 
 		@Override
 		public boolean acceptLayer(String layer) {
-//			System.out.println("SingleLayerFilter.acceptlayer(" + layerName + ") considering " + layer);
 			return Utils.same(layer, layerName);
 		}
 	}
 
-	void assertPlainLayer(String expected, TagmlDocument document, String layerName) {
-		String text = document.spoolAsText(new SingleLayerFilter(layerName));
+	void assertPlainLayer(String expected, Document document, String layerName) {
+		String text = Markup.spoolAsText(document, new SingleLayerFilter(layerName));
 		assertEquals(expected, text);
 	}
 
-	void assertAnnotatedLayer(String expected, TagmlDocument document, String layerName) {
-		String text = document.spoolAsMarkup(new SingleLayerFilter(layerName));
+	void assertAnnotatedLayer(String expected, Document document, String layerName) {
+		String text = Markup.spoolAsMarkup(document, new SingleLayerFilter(layerName));
 		assertEquals(expected, text);
 	}
 
-	Node get(Layer layer, int index) {
+	Chunk get(Layer layer, int index) {
 		GetVisitor visitor = new GetVisitor(index);
-		layer.walk(visitor);
-		return visitor.found;
+		return (Chunk)layer.walk(visitor);
 	}
 
-	TagmlDocument parse(String input) throws IOException {
-		TagmlParser parser = new TagmlParser();
+	Document parse(String input) throws IOException {
+		DocumentFactory factory = new DagFactory();
+		Parser parser = new Parser(factory);
 		StringReader reader = new StringReader(input);
-		return parser.parse(reader);
+		Document document = parser.parse(reader);
+//		System.out.println("parsed(" + input + ") to " + document);
+		return document;
 	}
 
 	@Test
 	void testEmpty() throws IOException {
-		TagmlDocument doc = parse("");
+		Lexer.verbose = false;
+		Parser.verbose = false;
+		ParseContext.verbose = false;
+		Document doc = parse("");
 
 		assertNotNull(doc);
-		assertLayerCount(0, doc);
 		assertNodeCount(0, doc.getGlobalLayer());
 	}
 
 	@Test
 	void testPlainTextGlobal() throws IOException {
-		TagmlDocument doc = parse("John");
+		Document doc = parse("John");
 
 		assertNotNull(doc);
 		assertNodeCount(1, doc.getGlobalLayer());
@@ -137,19 +136,16 @@ class ParserTest {
 
 	@Test
 	void testStartEnd() throws IOException {
-		Lexer.verbose = false;
-		TagmlParser.verbose = false;
-		ParseContext.verbose = false;
-		TagmlDocument doc = parse("[A>John<A]");
+		Document doc = parse("[A>John<A]");
 
 		assertNotNull(doc);
 		Layer global = doc.getGlobalLayer();
 //		global.dump();
 		assertNodeCount(1, global);
-		Node node = get(global,0);
-		assertNotNull(node);
-		assertEquals("John", node.getValue());
-		assertNodeHasTag(node, null, "A");
+		Chunk chunk = get(global,0);
+		assertNotNull(chunk);
+		assertEquals("John", chunk.getValue());
+		assertChunkHasTag(chunk, null, "A");
 
 		assertPlainLayer("John", doc, null);
 		assertPlainLayer("", doc, "X");
@@ -160,7 +156,7 @@ class ParserTest {
 
 	@Test
 	void testOverlap() throws IOException {
-		TagmlDocument doc = parse("Stuart[A>John[B>Paul<A]George<B]Ringo");
+		Document doc = parse("Stuart[A>John[B>Paul<A]George<B]Ringo");
 
 		assertNotNull(doc);
 		Layer global = doc.getGlobalLayer();
@@ -175,7 +171,7 @@ class ParserTest {
 
 	@Test
 	void testLayers() throws IOException {
-		TagmlDocument doc = parse("Stuart[A|+f>John[B>Paul<A|f]George<B]Ringo");
+		Document doc = parse("Stuart[A|+f>John[B>Paul<A|f]George<B]Ringo");
 
 		assertNotNull(doc);
 		Layer global = doc.getGlobalLayer();

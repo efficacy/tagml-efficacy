@@ -1,15 +1,18 @@
-package com.efsol.tagml;
+package com.efsol.tagml.model.maps;
 
 import java.util.Collection;
 import java.util.Map;
 
-public class Node {
+import com.efsol.tagml.model.Position;
+import com.efsol.tagml.model.Tag;
+
+public class MapNode {
 	public static boolean verbose = false;
 	private final String value;
 	private final Position position;
 	private final Map<String, Collection<Tag>> layers;
 
-	public Node(String value, Position position, Map<String, Collection<Tag>> layers) {
+	public MapNode(String value, Position position, Map<String, Collection<Tag>> layers) {
 		log("creating Node(" + value + ") " + layers + " at " + position);
 		this.value = value;
 		this.position = position;

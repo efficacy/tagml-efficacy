@@ -6,21 +6,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.efsol.tagml.model.Chunk;
+import com.efsol.tagml.model.DocumentFactory;
+import com.efsol.tagml.model.Node;
+import com.efsol.tagml.model.Position;
+import com.efsol.tagml.model.Tag;
+
 public class ParseContext {
 	public static boolean verbose = false;
+	private DocumentFactory factory;
 	private Map<String, LayerContext> layers;
 	private StringBuilder buffer;
 	private Position position;
 
-	public ParseContext(TagmlDocument doc) {
+	public ParseContext(DocumentFactory factory) {
+		this.factory = factory;
 		this.layers = new HashMap<>();
 		this.buffer = new StringBuilder();
 		this.position = null;
-		for (Layer layer: doc.getlayers()) {
-			log("added initial layer");
-			layer.dump();
-			layers.put(layer.name, new LayerContext(layer.name));
-		}
 	}
 
 	public Collection<LayerContext> getLayers() {
@@ -48,7 +51,7 @@ public class ParseContext {
 		}
 		Tag tag = context.removeTag(name);
 		if (null == tag) {
-			System.out.println("removeTag(" + name +") layer=" + layer + " pos=" + position);
+			log("removeTag(" + name +") layer=" + layer + " pos=" + position);
 			throw new ParseException("attempt to close tag " + name + " not known on layer: " + layer, position);
 		}
 		if (context.isEmpty()) {
@@ -61,21 +64,26 @@ public class ParseContext {
 		this.buffer.append(text);
 	}
 
-	public Node swap() {
+	public Chunk swap() {
 		log("swap pos=" + position);
-		Node ret = null;
+		Chunk ret = null;
 		if (buffer.length() > 0) {
 			String text = buffer.toString();
+			log("swap:text=" + text);
 			buffer.setLength(0);
-			Map<String, Collection<Tag>> nodeLayers = new HashMap<>();
+			Map<String, Node> nodeLayers = new HashMap<>();
 			for (String layerName : this.layers.keySet()) {
-				List<Tag> layer = new ArrayList<>();
+				log("swap: considering layer " + layerName);
+				List<Tag> tags = new ArrayList<>();
+				log("swap: got tags: " + tags);
 				for (Tag tag : this.layers.get(layerName).getTags()) {
-					layer.add(tag);
+					tags.add(tag);
 				}
-				nodeLayers.put(layerName, layer);
+				log("swap: after adds tags: " + tags);
+				Node node = factory.createNode(layerName, tags);
+				nodeLayers.put(layerName, node);
 			}
-			ret = new Node(text, position, nodeLayers);
+			ret = factory.createChunk(text, position, nodeLayers);
 		}
 		this.position = null;
 		log("swap returning " + ret);

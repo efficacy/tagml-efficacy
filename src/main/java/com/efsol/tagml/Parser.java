@@ -3,22 +3,33 @@ package com.efsol.tagml;
 import java.io.IOException;
 import java.io.Reader;
 
-import com.efsol.tagml.lex.Token;
 import com.efsol.tagml.lex.CloseToken;
 import com.efsol.tagml.lex.Lexer;
 import com.efsol.tagml.lex.OpenToken;
 import com.efsol.tagml.lex.TextToken;
+import com.efsol.tagml.lex.Token;
+import com.efsol.tagml.model.Chunk;
+import com.efsol.tagml.model.Document;
+import com.efsol.tagml.model.DocumentFactory;
 
-public class TagmlParser {
+public class Parser {
 	public static boolean verbose = false;
-	public TagmlDocument parse(Reader input) throws IOException {
-		Lexer lexer = new Lexer(input);
-		return parse(lexer);
+	private DocumentFactory factory;
+
+	public Parser(DocumentFactory factory) {
+		this.factory = factory;
 	}
 
-	public TagmlDocument parse(Lexer lexer) throws IOException {
-		TagmlDocument ret = new TagmlDocument();
-		ParseContext context = new ParseContext(ret);
+	public Document parse(Reader input) throws IOException {
+		Lexer lexer = new Lexer(input);
+		parse(lexer);
+		Document ret = factory.createDocument();
+		return ret;
+	}
+
+	public void parse(Lexer lexer) throws IOException {
+		factory.reset();
+		ParseContext context = new ParseContext(factory);
 
 		for(;;) {
 			Token token = lexer.next();
@@ -32,7 +43,7 @@ public class TagmlParser {
 				log("Parser: it's a text token: " + token);
 				context.append(((TextToken)token).getText());
 				context.setPosition(token.getPosition());
-				ret.addNode(context.swap());
+				factory.addChunk(context.swap());
 				break;
 			case OPEN:
 				log("Parser: it's an open token: " + token);
@@ -59,12 +70,10 @@ public class TagmlParser {
 
 		if (context.isIncomplete()) {
 			log("at end, buffer is incomplete");
-			Node node = context.swap();
-			log("completed incomplete node: " + node);
-			ret.addNode(node);
+			Chunk chunk = context.swap();
+			log("completed incomplete chunk: " + chunk);
+			factory.addChunk(chunk);
 		}
-		log("Parser returning: " + ret);
-		return ret;
 	}
 
 	void log(String s) {

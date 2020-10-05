@@ -1,7 +1,7 @@
-package com.efsol.tagml;
+package com.efsol.tagml.model;
 
 public interface DocumentFilter {
-	boolean accept(Node node);
+	boolean accept(Chunk chunk);
 	default boolean acceptLayer(String layer) {
 		return true;
 	}
