@@ -1,5 +1,8 @@
 Current
 =======
+separate model from parser
+clean model api
+directed graph model
 
 Sooner
 ======
