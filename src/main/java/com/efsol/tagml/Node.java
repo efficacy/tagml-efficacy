@@ -28,6 +28,11 @@ public class Node {
 		return layers;
 	}
 
+	public boolean isOnLayer(String layerName) {
+		Collection<Tag> layer = layers.get(layerName);
+		return null != layer && !layer.isEmpty();
+	}
+
 	@Override
 	public String toString() {
 		return "Node(" + value + ")" + layers + " at " + position;

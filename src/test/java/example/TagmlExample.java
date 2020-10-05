@@ -14,14 +14,19 @@ public class TagmlExample {
 		TagmlParser parser = new TagmlParser();
 		Reader reader = new FileReader("testdata/example.tagml");
 		TagmlDocument document = parser.parse(reader);
+		reader.close();
 
-		String result = document.spoolAsText(new DocumentFilter() {
+		DocumentFilter filter = new DocumentFilter() {
 			@Override
 			public boolean accept(Node node) {
-				return node.getLayers().containsKey("f");
+				return node.isOnLayer("f");
 			}
-		});
-		System.out.println(result);
-		reader.close();
+		};
+
+		String plain = document.spoolAsText(filter);
+		System.out.println(plain);
+
+		String markup = document.spoolAsMarkup(filter);
+		System.out.println(markup);
 	}
 }
