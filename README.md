@@ -3,7 +3,7 @@ The Efficacy TAGML Parser
 
 About this Project
 ------------------
-This code is a fresh attempt at creating a performant Java parser and in-memory model for the [TAGML markup language](https://www.balisage.net/Proceedings/vol21/print/HaentjensDekker01/BalisageVol21-HaentjensDekker01.html). It was started in 2020 following discussions with Ronald Haentjens Dekker (@rhdekker)and Bram Buitendijk (@brambg) as part of the [The 20th ACM Symposium on Document Engineering](https://doceng.org/doceng2020) in October 2020. As of now it mainly exists as a test bed to explore the both the performance of parsers and the usage and semantics of data marked up in this way.
+This code is a fresh attempt at creating a performant Java parser and in-memory model for the [TAGML markup language](https://www.balisage.net/Proceedings/vol21/print/HaentjensDekker01/BalisageVol21-HaentjensDekker01.html). It was started in 2020 following discussions with Ronald Haentjens Dekker ([@rhdekker](https://github.com/rhdekker)) and Bram Buitendijk ([@brambg](https://github.com/brambg)) as part of the [The 20th ACM Symposium on Document Engineering](https://doceng.org/doceng2020) in October 2020. As of now it mainly exists as a test bed to explore the both the performance of parsers and the usage and semantics of data marked up in this way.
 
 Code Status
 -----------
