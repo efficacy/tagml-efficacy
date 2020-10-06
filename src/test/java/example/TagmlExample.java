@@ -18,6 +18,8 @@ public class TagmlExample {
 		Parser parser = new Parser(factory);
 		Reader reader = new FileReader("testdata/example.tagml");
 		Document document = parser.parse(reader);
+		reader.close();
+
 //		System.out.println("parsed to " + document);
 
 		DocumentFilter filter = new DocumentFilter() {
