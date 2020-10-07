@@ -16,7 +16,7 @@ Later
 =====
 comments
 namespaces
-annontations
+annotations
 json filter (compatible with examples from Alexandria)
 
 Maybe
