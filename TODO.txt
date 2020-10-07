@@ -4,6 +4,7 @@ bug: chunk iterator not working?
 
 Sooner
 ======
+untangle layer and tag filtering
 escapes
 layer pause/resume
 optional tags
@@ -15,6 +16,8 @@ Later
 comments
 namespaces
 annontations
+json filter (compatible with examples from Alexandria)
+include
 
 Maybe
 =====
@@ -34,3 +37,16 @@ Done
 2020-10-05 separate model from parser
 2020-10-05 clean model api
 2020-10-05 directed graph model
+
+Questions
+=========
+Conceptually what are "on" the layers - tagged text chunks, or the tags themselves ? I have opted for tagged text, but the TAGML docs are not clear.
+Why does TAGML mandate a '+' to introduce a new layer when auto-creation is simpler and less context-sensitive ?
+Does all text not on a named layer exist on a single un-named layer ? 
+Should layers have namespaces (e.g to distinguish between semantic layers and ones used to resolve self-overlapping ambiguity) ?
+is un-tagged text (or text outside a "root" tag) valid? If not, why not ?
+What is the use of alternates without metadata to distinguish between them ?
+Should it be possible to indicate that text is on a layer without enclosing it in a tag pair ?
+Why are annotation values not strict JSON ?
+What is the benefit of layer inference in close tags ? It's both dangerous and (relatively) complex to process. Does anyone really want to save a couple of keystrokes this way ?
+The whitespace normalisation rules seem strange if the aim is to preserve and annotate the original text. What if you are tracking (for example) trends in one-space vs two-spaces after a peroid ?
