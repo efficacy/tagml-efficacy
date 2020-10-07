@@ -6,7 +6,7 @@ Sooner
 ======
 untangle layer and tag filtering
 escapes
-layer pause/resume
+tag pause/resume
 optional tags
 singleton tags
 alternates
@@ -17,10 +17,10 @@ comments
 namespaces
 annontations
 json filter (compatible with examples from Alexandria)
-include
 
 Maybe
 =====
+include
 
 Never
 =====
