@@ -5,6 +5,7 @@ bug: chunk iterator not working?
 Sooner
 ======
 untangle layer and tag filtering
+multiple layers per tag
 escapes
 tag pause/resume
 optional tags
