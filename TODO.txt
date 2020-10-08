@@ -1,11 +1,10 @@
 Current
 =======
-escapes
+multiple layers per tag
 
 Sooner
 ======
 untangle layer and tag filtering
-multiple layers per tag
 tag pause/resume
 optional tags
 singleton tags
@@ -39,6 +38,7 @@ Done
 2020-10-05 clean model api
 2020-10-05 directed graph model
 2020-10-08 bug: chunk iterator not working
+2020-10-08 escapes
 
 Questions
 =========

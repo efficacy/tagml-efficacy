@@ -115,4 +115,26 @@ public class ParserTest {
         assertAnnotatedLayer("[A|f>JohnPaul<A|f]", doc, "f");
         assertAnnotatedLayer("Stuart[B>PaulGeorge<B]Ringo", doc, null);
     }
+
+    @Test
+    void testEscape() throws IOException {
+        Document doc = parse("\\[A>John\\<A]");
+
+        assertNotNull(doc);
+        Layer global = doc.getGlobalLayer();
+        TestUtils.assertNodeCount(1, global);
+
+        assertPlainLayer("[A>John<A]", doc, null);
+    }
+
+    @Test
+    void testEscapeEscape() throws IOException {
+        Document doc = parse("[A>John\\\\<A]");
+
+        assertNotNull(doc);
+        Layer global = doc.getGlobalLayer();
+        TestUtils.assertNodeCount(1, global);
+
+        assertPlainLayer("John\\", doc, null);
+    }
 }
