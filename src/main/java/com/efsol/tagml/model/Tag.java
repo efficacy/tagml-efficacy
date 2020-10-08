@@ -37,6 +37,17 @@ public class Tag {
         return ret.toString();
     }
 
+    public String toOpenString() {
+        StringBuilder ret = new StringBuilder("[");
+        ret.append(name);
+        if (null != layer) {
+            ret.append("|");
+            ret.append(namespace);
+        }
+        ret.append(">");
+        return ret.toString();
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Tag))

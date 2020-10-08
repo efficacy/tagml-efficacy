@@ -47,7 +47,7 @@ class DocumentTest {
     @Test
     void testOneChunkWithTagButNoLayer() {
         DagFactory factory = new DagFactory();
-        Node node = factory.createNode(null, Arrays.asList(new Tag("A", null, null, null)));
+        Node node = factory.createNode(null, Arrays.asList(new Tag("A", null, null, null, null)));
         Map<String, Node> nodes = new HashMap<>();
         nodes.put(null, node);
         Chunk chunk = new DagChunk("hello", new Position(1, 1), nodes);
@@ -61,7 +61,7 @@ class DocumentTest {
     @Test
     void testOneChunkWithTagAndLayer() {
         DagFactory factory = new DagFactory();
-        Node node = factory.createNode("f", Arrays.asList(new Tag("A", "f", null, null)));
+        Node node = factory.createNode("f", Arrays.asList(new Tag("A", "f", null, null, null)));
         Map<String, Node> nodes = new HashMap<>();
         nodes.put("f", node);
         Chunk chunk = new DagChunk("hello", new Position(1, 1), nodes);

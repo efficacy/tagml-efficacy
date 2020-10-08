@@ -120,7 +120,15 @@ public class ParseContext {
             }
         }
         if (!unclosed.isEmpty()) {
-            throw new ParseException("unclosed tag(s): " + unclosed, unclosed.get(0).position);
+            StringBuilder error = new StringBuilder();
+            boolean had = false;
+            for (Tag tag : unclosed) {
+                if (had) {
+                    error.append(",");
+                }
+                error.append(tag.toOpenString());
+            }
+            throw new ParseException("unclosed tag(s): " + error, unclosed.get(0).position);
         }
     }
 }
