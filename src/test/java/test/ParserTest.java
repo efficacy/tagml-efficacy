@@ -15,6 +15,7 @@ import com.efsol.tagml.model.DocumentFactory;
 import com.efsol.tagml.model.Layer;
 import com.efsol.tagml.model.dag.DagFactory;
 import com.efsol.tagml.parser.ParseContext;
+import com.efsol.tagml.parser.ParseException;
 import com.efsol.tagml.parser.Parser;
 
 import test.helper.GetVisitor;
@@ -136,5 +137,25 @@ public class ParserTest {
         TestUtils.assertNodeCount(1, global);
 
         assertPlainLayer("John\\", doc, null);
+    }
+
+    @Test
+    void testUnmatchedCloseTag() throws IOException {
+        try {
+            parse("John<A]");
+            fail("document with unmatched close tag shoudl throw");
+        } catch (ParseException e) {
+            // expected, do nothing
+        }
+    }
+
+    @Test
+    void testUnmatchedOpenTag() throws IOException {
+        try {
+            parse("[A>John");
+            fail("document with unmatched open tag shoudl throw");
+        } catch (ParseException e) {
+            // expected, do nothing
+        }
     }
 }

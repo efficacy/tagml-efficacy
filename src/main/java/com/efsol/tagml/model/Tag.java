@@ -7,12 +7,14 @@ import com.efsol.util.Utils;
 public class Tag {
     public final String name;
     public final String layer;
+    public final Position position;
     public final String namespace;
     public final Collection<Annotation> annotations;
 
-    public Tag(String type, String layer, String namespace, Collection<Annotation> annotations) {
+    public Tag(String type, String layer, Position position, String namespace, Collection<Annotation> annotations) {
         this.name = type;
         this.layer = layer;
+        this.position = position;
         this.namespace = namespace;
         this.annotations = annotations;
     }

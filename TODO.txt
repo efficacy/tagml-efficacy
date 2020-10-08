@@ -2,7 +2,6 @@ VERSION 0.2.1
 
 Current
 =======
-check for unclosed tags
 multiple layers per tag
 
 Sooner
@@ -43,6 +42,7 @@ Done
 2020-10-08 bug: chunk iterator not working
 2020-10-08 moved Parser to its own package. Bumped version to 0.2
 2020-10-08 escapes
+2020-10-08 check for unclosed tags
 
 Questions
 =========
