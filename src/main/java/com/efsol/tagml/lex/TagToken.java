@@ -1,28 +1,29 @@
 package com.efsol.tagml.lex;
 
+import java.util.Collection;
+
 import com.efsol.tagml.model.Position;
 
 public abstract class TagToken extends AbstractToken {
-	protected final String name;
-	protected final String layer;
+    protected final String name;
+    protected final Collection<String> layers;
 
-	public TagToken(TokenType type, String name, String layer, Position position) {
-		super(type, position);
-		this.name = name;
-		this.layer = layer;
-	}
+    public TagToken(TokenType type, String name, Collection<String> layers, Position position) {
+        super(type, position);
+        this.name = name;
+        this.layers = layers;
+    }
 
-	@Override
-	public boolean isEmpty() {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public boolean isEmpty() {
+        return false;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getLayer() {
-		return layer;
-	}
+    public Collection<String> getLayers() {
+        return layers;
+    }
 }

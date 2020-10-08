@@ -30,22 +30,41 @@ public class ParseContext {
         return layers.values();
     }
 
-    public Tag addTag(String name, String layer, Position position) {
-        log("addTag(" + name + "," + layer + ") at " + position);
-        LayerContext context = layers.get(layer);
+    public void addTag(String name, Collection<String> layers, Position position) {
+        log("addTag(" + name + "," + layers + ") at " + position);
+        if (null == layers || layers.isEmpty()) {
+            addTagToLayer(name, null, position);
+        } else {
+            for (String layer : layers) {
+                addTagToLayer(name, layer, position);
+            }
+        }
+    }
+
+    private void addTagToLayer(String name, String layer, Position position) {
+        LayerContext context = this.layers.get(layer);
         if (null == context) { // Auto-Create layers for now
             context = new LayerContext(layer);
-            layers.put(layer, context);
+            this.layers.put(layer, context);
 //			throw new ParseException("attempt to add tag to unknown layer: " + layer, position);
         }
         Tag tag = new Tag(name, layer, position, null, null);
         context.add(tag);
-        return tag;
     }
 
-    public Tag removeTag(String name, String layer, Position position) throws ParseException {
-        log("removeTag(" + name + "," + layer + ") at " + position);
-        LayerContext context = layers.get(layer);
+    public void removeTag(String name, Collection<String> layers, Position position) throws ParseException {
+        log("removeTag(" + name + "," + layers + ") at " + position);
+        if (null == layers || layers.isEmpty()) {
+            removeTagFromLayer(name, null, position);
+        } else {
+            for (String layer : layers) {
+                removeTagFromLayer(name, layer, position);
+            }
+        }
+    }
+
+    private void removeTagFromLayer(String name, String layer, Position position) throws ParseException {
+        LayerContext context = this.layers.get(layer);
         if (null == context) {
             throw new ParseException("attempt to remove tag from unknown layer: " + layer, position);
         }
@@ -55,9 +74,8 @@ public class ParseContext {
             throw new ParseException("attempt to close tag " + name + " not known on layer: " + layer, position);
         }
         if (context.isEmpty()) {
-            layers.remove(layer);
+            this.layers.remove(layer);
         }
-        return tag;
     }
 
     public void append(String text) {

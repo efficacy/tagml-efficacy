@@ -48,13 +48,13 @@ public class Parser {
             case OPEN:
                 log("Parser: it's an open token: " + token);
                 OpenToken ot = (OpenToken) token;
-                context.addTag(ot.getName(), ot.getLayer(), ot.getPosition());
+                context.addTag(ot.getName(), ot.getLayers(), ot.getPosition());
                 log("after open tag ctx=" + context);
                 break;
             case CLOSE:
                 log("Parser: it's a close token: " + token);
                 CloseToken ct = (CloseToken) token;
-                context.removeTag(ct.getName(), ct.getLayer(), ct.getPosition());
+                context.removeTag(ct.getName(), ct.getLayers(), ct.getPosition());
                 log("after close tag ctx=" + context);
                 break;
             case SINGLE:

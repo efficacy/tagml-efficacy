@@ -158,4 +158,19 @@ public class ParserTest {
             // expected, do nothing
         }
     }
+
+    @Test
+    void testMultipleLayersInTag() throws IOException {
+        Document doc = parse("[A|x,y>John<A|x,y]");
+
+        assertNotNull(doc);
+        Layer global = doc.getGlobalLayer();
+        TestUtils.assertNodeCount(1, global);
+
+        assertPlainLayer("John", doc, "x");
+        assertPlainLayer("John", doc, "x");
+
+        assertAnnotatedLayer("[A|x>John<A|x]", doc, "x");
+        assertAnnotatedLayer("[A|y>John<A|y]", doc, "y");
+    }
 }
