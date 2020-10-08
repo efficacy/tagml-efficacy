@@ -1,12 +1,11 @@
 Current
 =======
-bug: chunk iterator not working?
+escapes
 
 Sooner
 ======
 untangle layer and tag filtering
 multiple layers per tag
-escapes
 tag pause/resume
 optional tags
 singleton tags
@@ -17,6 +16,7 @@ Later
 comments
 namespaces
 annotations
+:id and links
 json filter (compatible with examples from Alexandria)
 
 Maybe
@@ -38,6 +38,7 @@ Done
 2020-10-05 separate model from parser
 2020-10-05 clean model api
 2020-10-05 directed graph model
+2020-10-08 bug: chunk iterator not working
 
 Questions
 =========

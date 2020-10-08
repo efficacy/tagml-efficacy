@@ -31,7 +31,7 @@ public class TagmlExample {
          * null - this is the default "base" layer used for text not on an explicit layer
          * $ - this is a "global" layer which includes all text regardless of layer
          */
-//      System.out.println("parsed to " + document);
+        System.out.println("parsed to " + document);
 
         // An example filter predicate, this one only cares about text on layer "f"
         DocumentFilter filter = new DocumentFilter() {
