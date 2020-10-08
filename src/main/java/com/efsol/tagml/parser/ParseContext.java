@@ -1,4 +1,4 @@
-package com.efsol.tagml;
+package com.efsol.tagml.parser;
 
 import java.util.ArrayList;
 import java.util.Collection;

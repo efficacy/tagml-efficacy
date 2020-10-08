@@ -13,7 +13,7 @@ Usage
 --------------
 The best place to look for usage examples is the unit test suite. However, usage of this parser is intended to be relatively simple.
 
-To parse a text document, create a `com.efsol.tagml.Parser` object then pass a Reader to the `parse(Reader input)` method. If the input text is well-formed, the `parse` method will return a `com.efsol.tagml.model.Document` object. If there are parsing errors, the code will throw a `com.efsol.tagml.ParseException` with details of the error and the location it occurred in the input stream.
+To parse a text document, create a `com.efsol.tagml.parser.Parser` object then pass a Reader to the `parse(Reader input)` method. If the input text is well-formed, the `parse` method will return a `com.efsol.tagml.model.Document` object. If there are parsing errors, the code will throw a `com.efsol.tagml.parser.ParseException` with details of the error and the location it occurred in the input stream.
 
 The resulting document consists of a sequence of `Node`s, each of which has text (which may be empty) and an optional set of layers, each of which contains one or more tags indicating the markup for this text chunk.
 
@@ -47,13 +47,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 
-import com.efsol.tagml.Parser;
 import com.efsol.tagml.markup.Markup;
 import com.efsol.tagml.model.Chunk;
 import com.efsol.tagml.model.Document;
 import com.efsol.tagml.model.DocumentFactory;
 import com.efsol.tagml.model.DocumentFilter;
 import com.efsol.tagml.model.dag.DagFactory;
+import com.efsol.tagml.parser.Parser;
 
 public class TagmlExample {
     public static void main(String[] args) throws IOException {
@@ -74,7 +74,7 @@ public class TagmlExample {
          * null - this is the default "base" layer used for text not on an explicit layer
          * $ - this is a "global" layer which includes all text regardless of layer
          */
-//      System.out.println("parsed to " + document);
+        System.out.println("parsed to " + document);
 
         // An example filter predicate, this one only cares about text on layer "f"
         DocumentFilter filter = new DocumentFilter() {

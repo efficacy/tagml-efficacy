@@ -1,4 +1,4 @@
-package com.efsol.tagml;
+package com.efsol.tagml.parser;
 
 import java.io.IOException;
 

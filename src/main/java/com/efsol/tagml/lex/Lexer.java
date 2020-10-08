@@ -5,8 +5,8 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.efsol.tagml.ParseException;
 import com.efsol.tagml.model.Position;
+import com.efsol.tagml.parser.ParseException;
 
 public class Lexer {
 	public static boolean verbose = false;

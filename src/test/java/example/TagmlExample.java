@@ -4,13 +4,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 
-import com.efsol.tagml.Parser;
 import com.efsol.tagml.markup.Markup;
 import com.efsol.tagml.model.Chunk;
 import com.efsol.tagml.model.Document;
 import com.efsol.tagml.model.DocumentFactory;
 import com.efsol.tagml.model.DocumentFilter;
 import com.efsol.tagml.model.dag.DagFactory;
+import com.efsol.tagml.parser.Parser;
 
 public class TagmlExample {
     public static void main(String[] args) throws IOException {

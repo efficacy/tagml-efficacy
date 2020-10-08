@@ -7,8 +7,6 @@ import java.io.StringReader;
 
 import org.junit.jupiter.api.Test;
 
-import com.efsol.tagml.ParseContext;
-import com.efsol.tagml.Parser;
 import com.efsol.tagml.lex.Lexer;
 import com.efsol.tagml.markup.Markup;
 import com.efsol.tagml.model.Chunk;
@@ -16,6 +14,8 @@ import com.efsol.tagml.model.Document;
 import com.efsol.tagml.model.DocumentFactory;
 import com.efsol.tagml.model.Layer;
 import com.efsol.tagml.model.dag.DagFactory;
+import com.efsol.tagml.parser.ParseContext;
+import com.efsol.tagml.parser.Parser;
 
 import test.helper.GetVisitor;
 import test.helper.SingleLayerFilter;
