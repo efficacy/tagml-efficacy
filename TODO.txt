@@ -2,10 +2,10 @@ VERSION 0.2.1
 
 Current
 =======
+untangle layer and tag filtering
 
 Sooner
 ======
-untangle layer and tag filtering
 tag pause/resume
 optional tags
 singleton tags
