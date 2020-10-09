@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import com.efsol.tagml.model.Position;
@@ -14,38 +13,27 @@ public class Lexer {
     public static boolean verbose = false;
 
     /** states **/
-    public static final int OUT = 0x100;
-    public static final int O_OR_S = 0x200;
-    public static final int OS_LAYER = 0x300;
-    public static final int C_OR_A = 0x400;
-    public static final int C_LAYER = 0x500;
-    public static final int A_LAYER = 0x600;
+    enum State {
+        OUT, O_OR_S, OS_LAYER, C_OR_A, C_LAYER, A_LAYER
+    }
 
     /** character types **/
-    public static final int OTHER = 0;
-    public static final int OPEN_SQ = 1;
-    public static final int OPEN_ANG = 2;
-    public static final int CLOSE_SQ = 3;
-    public static final int CLOSE_ANG = 4;
-    public static final int VBAR = 5;
-    public static final int PLUS = 6;
-    public static final int MINUS = 7;
-    public static final int QUERY = 8;
-    public static final int COMMA = 9;
-    public static final int WHITESPACE = 20;
+    enum Ctype {
+        OPEN_SQ, OPEN_ANG, CLOSE_SQ, CLOSE_ANG, NAME, VBAR, PLUS, MINUS, QUERY, COMMA, WHITESPACE, OTHER
+    }
 
     private TokenContext context;
     private Reader input;
     private Position position;
     private boolean esc;
-    private int state;
+    private State state;
 
     public Lexer(Reader input) {
         this.context = new TokenContext();
         this.input = input;
         this.position = new Position();
         this.esc = false;
-        this.state = OUT;
+        this.state = State.OUT;
     }
 
     public Position getPosition() {
@@ -89,31 +77,36 @@ public class Lexer {
         return nextChar(true);
     }
 
-    public static int charType(int c) {
+    public static Ctype charType(int c) {
         switch (c) {
         case '[':
-            return OPEN_SQ;
+            return Ctype.OPEN_SQ;
         case ']':
-            return CLOSE_SQ;
+            return Ctype.CLOSE_SQ;
         case '<':
-            return OPEN_ANG;
+            return Ctype.OPEN_ANG;
         case '>':
-            return CLOSE_ANG;
+            return Ctype.CLOSE_ANG;
         case '|':
-            return VBAR;
+            return Ctype.VBAR;
         case '+':
-            return PLUS;
+            return Ctype.PLUS;
         case '-':
-            return MINUS;
+            return Ctype.MINUS;
         case '?':
-            return QUERY;
+            return Ctype.QUERY;
         case ',':
-            return COMMA;
+            return Ctype.COMMA;
+        case '_':
+            return Ctype.NAME;
         default:
-            if (Character.isWhitespace(c)) {
-                return WHITESPACE;
+            if (Character.isAlphabetic(c) || Character.isDigit(c)) {
+                return Ctype.NAME;
             }
-            return OTHER;
+            if (Character.isWhitespace(c)) {
+                return Ctype.WHITESPACE;
+            }
+            return Ctype.OTHER;
         }
     }
 
@@ -179,16 +172,12 @@ public class Lexer {
             break;
         case OPEN:
             log("biulding open ctx=" + context);
-            log("biulding open ctx.layers=" + context.layers);
             ret = new OpenToken(context.name, snapshotLayers(context.layers), context.position);
-            log("biulding open created layers=" + ((TagToken) ret).getLayers());
             log("biulding open created tag=" + ret);
             break;
         case CLOSE:
             log("biulding close ctx=" + context);
-            log("biulding close ctx.layers=" + context.layers);
             ret = new CloseToken(context.name, snapshotLayers(context.layers), context.position);
-            log("biulding close created layers=" + ((TagToken) ret).getLayers());
             log("biulding close created tag=" + ret);
             break;
         case SINGLE:
@@ -225,167 +214,243 @@ public class Lexer {
         Token ret = null;
 
         for (int i = nextChar(); i != 0; i = nextChar()) {
-            int ctype = esc ? OTHER : charType(i);
+            Ctype ctype = esc ? Ctype.OTHER : charType(i);
             char c = (char) i;
-            log("state=" + stateName(state) + " charType(" + c + ")=" + ctype);
-            switch (state + ctype) {
-
-            // do nothing, ignore whitespace in tags (for now)
-            case O_OR_S + WHITESPACE:
-            case C_OR_A + WHITESPACE:
-            case OS_LAYER + WHITESPACE:
-            case C_LAYER + WHITESPACE:
-            case A_LAYER + WHITESPACE:
-                break;
-
-            // accumulate text outside tags
-            case OUT + OTHER:
-            case OUT + WHITESPACE:
-            case OUT + VBAR:
-            case OUT + PLUS:
-            case OUT + MINUS:
-            case OUT + QUERY:
-            case OUT + COMMA:
-            case OUT + CLOSE_SQ:
-            case OUT + CLOSE_ANG:
-                if (null == context.type) {
-                    context.type = TokenType.TEXT;
+            log("state=" + state + " charType(" + c + ")=" + ctype);
+            switch (state) {
+            case OUT:
+                switch (ctype) {
+                case OPEN_ANG:
+                    ret = flushText();
                     context.setPosition(position.snapshot());
-//					log("starting text at " + context.position);
-                }
-                context.buf.append(c);
-                log(" token type=" + context.type + " appended(" + c + ") value=" + context.value);
-                break;
-
-            case OUT + OPEN_SQ:
-                ret = flushText();
-                context.setPosition(position.snapshot());
-                context.type = TokenType.OPEN;
-                log("entering open or single, context pos=" + context.position);
-                state = O_OR_S;
-                break;
-            case OUT + OPEN_ANG:
-                ret = flushText();
-                context.setPosition(position.snapshot());
-                context.type = TokenType.CLOSE;
-                log("entering close or alt, context pos=" + context.position);
-                state = C_OR_A;
-                break;
-
-            case O_OR_S + CLOSE_ANG:
-                if (0 == context.buf.length()) {
-                    throw new ParseException("Tag name cannot be empty", position);
-                }
-                context.name = claimBuffer(context.buf);
-                ret = buildToken(context); // build the open tag
-                state = OUT;
-                break;
-            case O_OR_S + CLOSE_SQ:
-                if (0 == context.buf.length()) {
-                    throw new ParseException("Tag name cannot be empty", position);
-                }
-                context.name = claimBuffer(context.buf);
-                context.type = TokenType.SINGLE;
-                ret = buildToken(context); // build the open tag
-                state = OUT;
-
-            case O_OR_S + OTHER:
-                context.buf.append(c);
-                break;
-            case O_OR_S + VBAR:
-                if (0 == context.buf.length()) {
-                    throw new ParseException("Tag name cannot be empty", position);
-                }
-                context.name = claimBuffer(context.buf);
-                state = OS_LAYER;
-                break;
-            case OS_LAYER + OTHER:
-                context.buf.append(c);
-                break;
-            case OS_LAYER + PLUS:
-                // ignore plus and autocreate for now
-                break;
-            case OS_LAYER + COMMA:
-                if (0 == context.buf.length()) {
-                    throw new ParseException("layer name cannot be empty", position);
-                }
-                String openLayer = claimBuffer(context.buf);
-                context.layers.add(openLayer);
-                break;
-            case OS_LAYER + CLOSE_ANG:
-                if (context.buf.length() > 0) {
-                    context.layers.add(claimBuffer(context.buf));
-                }
-                ret = buildToken(context); // build the open tag
-                state = OUT;
-                break;
-            case OS_LAYER + CLOSE_SQ:
-                context.type = TokenType.SINGLE;
-                ret = buildToken(context); // build the open tag
-                state = OUT;
-                break;
-
-            case C_OR_A + CLOSE_SQ:
-//			log("building close token, context pos=" + context.position);
-                if (0 == context.buf.length()) {
-                    throw new ParseException("Tag name cannot be empty", position);
-                }
-                context.name = claimBuffer(context.buf);
-                ret = buildToken(context); // build the close tag
-                state = OUT;
-                break;
-            case C_OR_A + OTHER:
-                context.buf.append(c);
-                break;
-            case C_OR_A + VBAR:
-                if (context.buf.length() > 0) {
-                    context.name = claimBuffer(context.buf);
                     context.type = TokenType.CLOSE;
-                    state = C_LAYER;
-                } else {
-                    context.type = TokenType.ALT;
-                    state = A_LAYER;
+                    log("entering close or alt, context pos=" + context.position);
+                    state = State.C_OR_A;
+                    break;
+                case OPEN_SQ:
+                    ret = flushText();
+                    context.setPosition(position.snapshot());
+                    context.type = TokenType.OPEN;
+                    log("entering open or single, context pos=" + context.position);
+                    state = State.O_OR_S;
+                    break;
+                case CLOSE_ANG:
+                case CLOSE_SQ:
+                case COMMA:
+                case MINUS:
+                case PLUS:
+                case QUERY:
+                case VBAR:
+                case NAME:
+                case WHITESPACE:
+                case OTHER:
+                    if (null == context.type) {
+                        context.type = TokenType.TEXT;
+                        context.setPosition(position.snapshot());
+//                log("starting text at " + context.position);
+                    }
+                    context.buf.append(c);
+                    log(" token type=" + context.type + " appended(" + c + ") value=" + context.value);
+                    break;
                 }
                 break;
-            case C_LAYER + OTHER:
-            case A_LAYER + OTHER:
-                context.buf.append(c);
-                break;
-            case A_LAYER + VBAR:
-                String alt = claimBuffer(context.buf);
-                context.alternatives.add(alt);
-                break;
-            case C_LAYER + COMMA:
-                if (0 == context.buf.length()) {
-                    throw new ParseException("layer name cannot be empty", position);
-                }
-                String closeLayer = claimBuffer(context.buf);
-                context.layers.add(closeLayer);
-                break;
-            case C_LAYER + CLOSE_SQ:
-                if (0 == context.buf.length()) {
-                    throw new ParseException("layer name cannot be empty", position);
-                }
-                context.layers.add(claimBuffer(context.buf));
-                ret = buildToken(context); // build the open tag
-                state = OUT;
-                break;
-            case A_LAYER + CLOSE_ANG:
-                if (0 != context.buf.length()) {
-                    throw new ParseException("Alternate must end with |>", position);
-                }
-                ret = buildToken(context); // build the open tag
-                state = OUT;
-                break;
+            case O_OR_S:
+                switch (ctype) {
+                case WHITESPACE:
+                    // ignore whitespace in tags
+                    break;
+                case CLOSE_ANG:
+                    if (0 == context.buf.length()) {
+                        throw new ParseException("open tag name cannot be empty", position);
+                    }
+                    context.name = claimBuffer(context.buf);
+                    ret = buildToken(context); // build the open tag
+                    state = State.OUT;
+                    break;
+                case CLOSE_SQ:
+                    if (0 == context.buf.length()) {
+                        throw new ParseException("open tag name cannot be empty", position);
+                    }
+                    context.name = claimBuffer(context.buf);
+                    context.type = TokenType.SINGLE;
+                    ret = buildToken(context); // build the open tag
+                    state = State.OUT;
+                case NAME:
+                    context.buf.append(c);
+                    break;
+                case VBAR:
+                    if (0 == context.buf.length()) {
+                        throw new ParseException("open tag name cannot be empty", position);
+                    }
+                    context.name = claimBuffer(context.buf);
+                    state = State.OS_LAYER;
+                    break;
 
-            case O_OR_S + COMMA:
-            case C_OR_A + COMMA:
-                throw new ParseException("Comma is not allowed in a tag name", position);
+                case PLUS:
+                case MINUS:
+                    // TODO tag continuation
+
+                case OTHER:
+                case COMMA:
+                case OPEN_ANG:
+                case OPEN_SQ:
+                case QUERY:
+                    throw new ParseException("unexpected character " + c + " in tag name", position);
+                }
+                break;
+            case C_OR_A:
+                switch (ctype) {
+                case WHITESPACE:
+                    // ignore whitespace in tags
+                    break;
+                case CLOSE_SQ:
+                    log("building close token, context pos=" + context.position);
+                    if (0 == context.buf.length()) {
+                        throw new ParseException("close tag name cannot be empty", position);
+                    }
+                    context.name = claimBuffer(context.buf);
+                    ret = buildToken(context); // build the close tag
+                    state = State.OUT;
+                    break;
+                case NAME:
+                    context.buf.append(c);
+                    break;
+                case VBAR:
+                    if (context.buf.length() > 0) {
+                        context.name = claimBuffer(context.buf);
+                        context.type = TokenType.CLOSE;
+                        state = State.C_LAYER;
+                    } else {
+                        context.type = TokenType.ALT;
+                        state = State.A_LAYER;
+                    }
+                    break;
+
+                case PLUS:
+                case MINUS:
+                    // TODO tag continuation
+
+                case CLOSE_ANG:
+                case QUERY:
+                case OPEN_ANG:
+                case OPEN_SQ:
+                case COMMA:
+                case OTHER:
+                    throw new ParseException("unexpected character " + c + " in tag name", position);
+                }
+                break;
+            case OS_LAYER:
+                switch (ctype) {
+                case WHITESPACE:
+                    // ignore whitespace in tags
+                    break;
+                case CLOSE_ANG:
+                    if (0 == context.buf.length()) {
+                        throw new ParseException("layer name cannot be empty", position);
+                    }
+                    context.layers.add(claimBuffer(context.buf));
+                    ret = buildToken(context); // build the open tag
+                    state = State.OUT;
+                    break;
+                case CLOSE_SQ:
+                    if (0 == context.buf.length()) {
+                        throw new ParseException("layer name cannot be empty", position);
+                    }
+                    context.type = TokenType.SINGLE;
+                    ret = buildToken(context); // build the singleton tag
+                    state = State.OUT;
+                    break;
+                case COMMA:
+                    if (0 == context.buf.length()) {
+                        throw new ParseException("layer name cannot be empty", position);
+                    }
+                    String openLayer = claimBuffer(context.buf);
+                    context.layers.add(openLayer);
+                    break;
+                case PLUS:
+                    // ignore plus and auto-create layers for now
+                    // TODO reject if not at start of name
+                    break;
+                case NAME:
+                    context.buf.append(c);
+                    break;
+                case OPEN_ANG:
+                case OPEN_SQ:
+                case QUERY:
+                case VBAR:
+                case MINUS:
+                case OTHER:
+                    throw new ParseException("unexpected character " + c + " in layer name", position);
+                }
+                break;
+            case C_LAYER:
+                switch (ctype) {
+                case WHITESPACE:
+                    // ignore whitespace in tags
+                    break;
+                case CLOSE_SQ:
+                    if (0 == context.buf.length()) {
+                        throw new ParseException("layer name cannot be empty", position);
+                    }
+                    context.layers.add(claimBuffer(context.buf));
+                    ret = buildToken(context); // build the open tag
+                    state = State.OUT;
+                    break;
+                case COMMA:
+                    if (0 == context.buf.length()) {
+                        throw new ParseException("layer name cannot be empty", position);
+                    }
+                    String closeLayer = claimBuffer(context.buf);
+                    context.layers.add(closeLayer);
+                    break;
+                case NAME:
+                    context.buf.append(c);
+                    break;
+                case OPEN_ANG:
+                case OPEN_SQ:
+                case CLOSE_ANG:
+                case MINUS:
+                case PLUS:
+                case QUERY:
+                case VBAR:
+                case OTHER:
+                    throw new ParseException("unexpected character " + c + " in layer name", position);
+                }
+                break;
+            case A_LAYER:
+                switch (ctype) {
+                case CLOSE_ANG:
+                    if (0 != context.buf.length()) {
+                        throw new ParseException("Alternate must end with |>", position);
+                    }
+                    ret = buildToken(context); // build the open tag
+                    state = State.OUT;
+                    break;
+                case VBAR:
+                    String alt = claimBuffer(context.buf);
+                    context.alternatives.add(alt);
+                    break;
+                case WHITESPACE:
+                case CLOSE_SQ:
+                case COMMA:
+                case MINUS:
+                case OPEN_ANG:
+                case OPEN_SQ:
+                case PLUS:
+                case QUERY:
+                case NAME:
+                case OTHER:
+                    // just accumulate text for now
+                    // TODO decide how to parse and store alternate document fragments
+                    context.buf.append(c);
+                    break;
+                }
+                break;
 
             default:
                 throw new ParseException("unexpected character " + c + " in state " + state, position);
             }
-            log("after switch, state=" + stateName(state) + " ctx=" + context);
+            log("after switch, state=" + state + " ctx=" + context);
 //			log("nextToken after loop ret=" + ret);
             // if we constructed a non-empty token, return it
             if (null != ret && !ret.isEmpty())
@@ -409,22 +474,4 @@ public class Lexer {
             System.out.println(s);
     }
 
-    public static String stateName(int state) {
-        switch (state) {
-        case OUT:
-            return "OUT";
-        case O_OR_S:
-            return "O/S";
-        case OS_LAYER:
-            return "OS_LAYER";
-        case C_OR_A:
-            return "C/A";
-        case C_LAYER:
-            return "C_LAYER";
-        case A_LAYER:
-            return "A_LAYER";
-        default:
-            return "UNKNOWN";
-        }
-    }
 }

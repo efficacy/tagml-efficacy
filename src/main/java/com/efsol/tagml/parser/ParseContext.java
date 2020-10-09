@@ -66,12 +66,12 @@ public class ParseContext {
     private void removeTagFromLayer(String name, String layer, Position position) throws ParseException {
         LayerContext context = this.layers.get(layer);
         if (null == context) {
-            throw new ParseException("attempt to remove tag from unknown layer: " + layer, position);
+            throw new ParseException("attempt to close unopened tag " + name + " on layer: " + layer, position);
         }
         Tag tag = context.removeTag(name);
         if (null == tag) {
             log("removeTag(" + name + ") layer=" + layer + " pos=" + position);
-            throw new ParseException("attempt to close tag " + name + " not known on layer: " + layer, position);
+            throw new ParseException("attempt to close unopened tag " + name + " on layer: " + layer, position);
         }
         if (context.isEmpty()) {
             this.layers.remove(layer);
