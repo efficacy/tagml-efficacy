@@ -1,7 +1,7 @@
 package com.efsol.util;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -21,7 +21,7 @@ public class Utils {
     }
 
     public static <T> Set<T> difference(final Set<T> setOne, final Set<T> setTwo) {
-        Set<T> result = new HashSet<T>(setOne);
+        Set<T> result = new LinkedHashSet<T>(setOne);
         result.removeIf(setTwo::contains);
         return result;
     }

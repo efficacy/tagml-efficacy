@@ -78,7 +78,7 @@ public class Parser {
         context.enforceConsistency();
     }
 
-    void log(String s) {
+    static void log(String s) {
         if (verbose)
             System.out.println("Parser::" + s);
     }

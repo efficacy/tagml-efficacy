@@ -5,7 +5,6 @@ Current
 
 Sooner
 ======
-untangle layer and tag filtering
 tag pause/resume
 optional tags
 singleton tags
@@ -45,6 +44,8 @@ Done
 2020-10-08 multiple layers per tag
 2020-10-09 reject all invalid characters
 2020-10-09 limit names to alphanumeric + _
+2020-10-10 untangle layer and tag filtering
+2020-10-10 preserve tag order for better reconstitution
 
 
 Questions

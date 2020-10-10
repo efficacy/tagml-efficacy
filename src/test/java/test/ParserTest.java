@@ -14,12 +14,12 @@ import com.efsol.tagml.model.Document;
 import com.efsol.tagml.model.DocumentFactory;
 import com.efsol.tagml.model.Layer;
 import com.efsol.tagml.model.dag.DagFactory;
+import com.efsol.tagml.model.helper.SingleLayerFilter;
 import com.efsol.tagml.parser.ParseContext;
 import com.efsol.tagml.parser.ParseException;
 import com.efsol.tagml.parser.Parser;
 
 import test.helper.GetVisitor;
-import test.helper.SingleLayerFilter;
 import test.helper.TestUtils;
 
 public class ParserTest {
