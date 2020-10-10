@@ -96,3 +96,5 @@ public class TagmlExample {
     }
 }
 ```
+
+More example code can be found in [the *src/test/example* folder](src/text/example).
