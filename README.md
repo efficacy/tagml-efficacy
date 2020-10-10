@@ -97,4 +97,4 @@ public class TagmlExample {
 }
 ```
 
-More example code can be found in [the *src/test/java/example* folder](src/text/java/example/).
+More example code can be found in the *src/test/java/example* folder.
