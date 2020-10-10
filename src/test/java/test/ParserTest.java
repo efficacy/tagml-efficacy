@@ -113,7 +113,7 @@ public class ParserTest {
         assertPlainLayer("JohnPaul", doc, "f");
         assertPlainLayer("StuartPaulGeorgeRingo", doc, null);
 
-        assertAnnotatedLayer("[A|f>JohnPaul<A|f]", doc, "f");
+        assertAnnotatedLayer("[A>JohnPaul<A]", doc, "f");
         assertAnnotatedLayer("Stuart[B>PaulGeorge<B]Ringo", doc, null);
     }
 
@@ -170,7 +170,15 @@ public class ParserTest {
         assertPlainLayer("John", doc, "x");
         assertPlainLayer("John", doc, "x");
 
-        assertAnnotatedLayer("[A|x>John<A|x]", doc, "x");
-        assertAnnotatedLayer("[A|y>John<A|y]", doc, "y");
+        assertAnnotatedLayer("[A>John<A]", doc, "x");
+        assertAnnotatedLayer("[A>John<A]", doc, "y");
+    }
+
+    @Test
+    void testIgnoreComment() throws IOException {
+        Document doc = parse("[A>John[!and not!]Paul<A]");
+
+        assertPlainLayer("JohnPaul", doc, null);
+        assertAnnotatedLayer("[A>JohnPaul<A]", doc, null);
     }
 }

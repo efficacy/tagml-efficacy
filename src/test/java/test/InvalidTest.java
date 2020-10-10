@@ -79,6 +79,19 @@ class InvalidTest {
     }
 
     @Test
+    void testIncompleteMarkup() throws IOException {
+        assertInvalid("hello[a", "open tag never completed");
+        assertInvalid("hello[a|b", "open tag never completed");
+        assertInvalid("[a>hello<a", "close tag never completed");
+        assertInvalid("[a>hello<a|b", "close tag never completed");
+
+        assertInvalid("[!hello", "comment never completed");
+        assertInvalid("[!hello!", "comment never completed");
+        assertInvalid("[!hello!bc", "comment must end with !]");
+        assertInvalid("[!]", "comment never completed");
+    }
+
+    @Test
     void testInvalidStructure() throws IOException {
         assertInvalid("hello<b]", "unopened tag");
         assertInvalid("[a>hello", "unclosed tag");
@@ -89,6 +102,17 @@ class InvalidTest {
         assertInvalid("[a|x,y>hello<a|y]", "unclosed tag");
 
         assertInvalid("[a|x>hello<a]", "unopened tag"); // official TAGML seems to allow this ?
+    }
+
+    @Test
+    void testInvalidComments() throws IOException {
+        assertInvalid("[a!hello!]", "unexpected character ! in tag name");
+        assertInvalid("[!hello! ]", "comment must end with !]");
+        assertInvalid("[!hello!a]", "comment must end with !]");
+        assertInvalid("[!hello!>", "comment must end with !]");
+        assertInvalid("<!hello!]", "unexpected character ! in tag name");
+
+//        assertInvalid("[ !hello!]", "X"); // this may be valid depending on interpretation of whitespace rules?
     }
 
 }

@@ -14,12 +14,12 @@ public class Lexer {
 
     /** states **/
     enum State {
-        OUT, O_OR_S, OS_LAYER, C_OR_A, C_LAYER, A_LAYER
+        OUT, O_OR_S, OS_LAYER, C_OR_A, C_LAYER, A_LAYER, COMMENT, COMMENT_ENDING
     }
 
     /** character types **/
     enum Ctype {
-        OPEN_SQ, OPEN_ANG, CLOSE_SQ, CLOSE_ANG, NAME, VBAR, PLUS, MINUS, QUERY, COMMA, WHITESPACE, OTHER
+        OPEN_SQ, OPEN_ANG, CLOSE_SQ, CLOSE_ANG, NAME, VBAR, PLUS, MINUS, QUERY, COMMA, BANG, WHITESPACE, OTHER, END
     }
 
     private TokenContext context;
@@ -95,10 +95,14 @@ public class Lexer {
             return Ctype.MINUS;
         case '?':
             return Ctype.QUERY;
+        case '!':
+            return Ctype.BANG;
         case ',':
             return Ctype.COMMA;
         case '_':
             return Ctype.NAME;
+        case 0:
+            return Ctype.END;
         default:
             if (Character.isAlphabetic(c) || Character.isDigit(c)) {
                 return Ctype.NAME;
@@ -212,9 +216,13 @@ public class Lexer {
 
     public Token next() throws IOException {
         Token ret = null;
+        boolean going = true;
 
-        for (int i = nextChar(); i != 0; i = nextChar()) {
+        for (int i = nextChar(); going; i = nextChar()) {
             Ctype ctype = esc ? Ctype.OTHER : charType(i);
+            if (Ctype.END == ctype) {
+                going = false;
+            }
             char c = (char) i;
             log("state=" + state + " charType(" + c + ")=" + ctype);
             switch (state) {
@@ -230,8 +238,7 @@ public class Lexer {
                 case OPEN_SQ:
                     ret = flushText();
                     context.setPosition(position.snapshot());
-                    context.type = TokenType.OPEN;
-                    log("entering open or single, context pos=" + context.position);
+                    log("entering open, single or comment, context pos=" + context.position);
                     state = State.O_OR_S;
                     break;
                 case CLOSE_ANG:
@@ -240,6 +247,7 @@ public class Lexer {
                 case MINUS:
                 case PLUS:
                 case QUERY:
+                case BANG:
                 case VBAR:
                 case NAME:
                 case WHITESPACE:
@@ -252,12 +260,18 @@ public class Lexer {
                     context.buf.append(c);
                     log(" token type=" + context.type + " appended(" + c + ") value=" + context.value);
                     break;
+                case END:
+                    if (null != context.type) {
+                        context.value = claimBuffer(context.buf);
+                        ret = buildToken(context);
+                        log("created trailing token: " + ret);
+                    }
                 }
                 break;
             case O_OR_S:
                 switch (ctype) {
                 case WHITESPACE:
-                    // ignore whitespace in tags
+                    // ignore whitespace in tags (even in tag names??)
                     break;
                 case CLOSE_ANG:
                     if (0 == context.buf.length()) {
@@ -276,6 +290,7 @@ public class Lexer {
                     ret = buildToken(context); // build the open tag
                     state = State.OUT;
                 case NAME:
+                    context.type = TokenType.OPEN;
                     context.buf.append(c);
                     break;
                 case VBAR:
@@ -284,6 +299,12 @@ public class Lexer {
                     }
                     context.name = claimBuffer(context.buf);
                     state = State.OS_LAYER;
+                    break;
+                case BANG:
+                    if (context.buf.length() > 0) {
+                        throw new ParseException("unexpected character ! in tag name", position);
+                    }
+                    state = State.COMMENT;
                     break;
 
                 case PLUS:
@@ -296,6 +317,8 @@ public class Lexer {
                 case OPEN_SQ:
                 case QUERY:
                     throw new ParseException("unexpected character " + c + " in tag name", position);
+                case END:
+                    throw new ParseException("open tag never completed", position);
                 }
                 break;
             case C_OR_A:
@@ -335,8 +358,11 @@ public class Lexer {
                 case OPEN_ANG:
                 case OPEN_SQ:
                 case COMMA:
+                case BANG:
                 case OTHER:
                     throw new ParseException("unexpected character " + c + " in tag name", position);
+                case END:
+                    throw new ParseException("close tag never completed", position);
                 }
                 break;
             case OS_LAYER:
@@ -379,8 +405,11 @@ public class Lexer {
                 case QUERY:
                 case VBAR:
                 case MINUS:
+                case BANG:
                 case OTHER:
                     throw new ParseException("unexpected character " + c + " in layer name", position);
+                case END:
+                    throw new ParseException("open tag never completed", position);
                 }
                 break;
             case C_LAYER:
@@ -413,8 +442,11 @@ public class Lexer {
                 case PLUS:
                 case QUERY:
                 case VBAR:
+                case BANG:
                 case OTHER:
                     throw new ParseException("unexpected character " + c + " in layer name", position);
+                case END:
+                    throw new ParseException("close tag never completed", position);
                 }
                 break;
             case A_LAYER:
@@ -438,17 +470,62 @@ public class Lexer {
                 case OPEN_SQ:
                 case PLUS:
                 case QUERY:
+                case BANG:
                 case NAME:
                 case OTHER:
                     // just accumulate text for now
                     // TODO decide how to parse and store alternate document fragments
                     context.buf.append(c);
                     break;
+                case END:
+                    throw new ParseException("close tag never completed", position);
                 }
                 break;
-
-            default:
-                throw new ParseException("unexpected character " + c + " in state " + state, position);
+            case COMMENT:
+                switch (ctype) {
+                case BANG:
+                    state = State.COMMENT_ENDING;
+                    break;
+                case CLOSE_ANG:
+                case CLOSE_SQ:
+                case COMMA:
+                case MINUS:
+                case NAME:
+                case OPEN_ANG:
+                case OPEN_SQ:
+                case OTHER:
+                case PLUS:
+                case QUERY:
+                case VBAR:
+                case WHITESPACE:
+                    log("in comment, ignoring " + c);
+                    break; // ignore text in comments
+                case END:
+                    throw new ParseException("comment never completed", position);
+                }
+                break;
+            case COMMENT_ENDING:
+                switch (ctype) {
+                case CLOSE_SQ:
+                    state = State.OUT;
+                    break;
+                case BANG:
+                case CLOSE_ANG:
+                case COMMA:
+                case MINUS:
+                case NAME:
+                case OPEN_ANG:
+                case OPEN_SQ:
+                case OTHER:
+                case PLUS:
+                case QUERY:
+                case VBAR:
+                case WHITESPACE:
+                    throw new ParseException("comment must end with !]", position);
+                case END:
+                    throw new ParseException("comment never completed", position);
+                }
+                break;
             }
             log("after switch, state=" + state + " ctx=" + context);
 //			log("nextToken after loop ret=" + ret);
@@ -457,14 +534,6 @@ public class Lexer {
                 break;
         }
 
-        // deal with possible trailing or unclosed text
-        if (null == ret) {
-            if (null != context.type) {
-                context.value = claimBuffer(context.buf);
-                ret = buildToken(context);
-                log("created trailing token: " + ret);
-            }
-        }
         log("lexer returning: " + ret);
         return ret;
     }

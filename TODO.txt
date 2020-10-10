@@ -12,7 +12,6 @@ alternates
 
 Later
 =====
-comments
 namespaces
 annotations
 :id and links
@@ -46,7 +45,7 @@ Done
 2020-10-09 limit names to alphanumeric + _
 2020-10-10 untangle layer and tag filtering
 2020-10-10 preserve tag order for better reconstitution
-
+2020-10-10 comments
 
 Questions
 =========
@@ -60,3 +59,8 @@ Should it be possible to indicate that text is on a layer without enclosing it i
 Why are annotation values not strict JSON ?
 What is the benefit of layer inference in close tags ? It's both dangerous and (relatively) complex to process. Does anyone really want to save a couple of keystrokes this way ?
 The whitespace normalisation rules seem strange if the aim is to preserve and annotate the original text. What if you are tracking (for example) trends in one-space vs two-spaces after a peroid ?
+why use [! ... !] for comments rather than [| ... |] which not only better matches the conceptually similar alternate syntax, but will need a lot less escaping in regular text?
+
+Answered
+========
+
