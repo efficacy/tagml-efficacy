@@ -1,12 +1,16 @@
 package com.efsol.tagml.model.dag;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import com.efsol.tagml.model.Chunk;
 import com.efsol.tagml.model.ChunkVisitor;
 import com.efsol.tagml.model.Layer;
 import com.efsol.tagml.model.NodeFactory;
+import com.efsol.util.Utils;
 
 public class DagLayer implements Layer {
     public static boolean verbose = false;
@@ -43,9 +47,9 @@ public class DagLayer implements Layer {
             this.first = chunk;
             this.last = chunk;
         } else {
-            node.prev = this.last;
+            node.setPrevious(this.last);
             DagNode prev = (DagNode) this.last.getLayerNode(name);
-            prev.next = chunk;
+            prev.setNext(chunk);
             this.last = chunk;
         }
 
@@ -55,14 +59,18 @@ public class DagLayer implements Layer {
     @Override
     public Object walkForwards(ChunkVisitor visitor) {
         Chunk chunk = first;
+        Collection<Chunk> seen = new HashSet<>();
         while (null != chunk) {
+            if (seen.contains(chunk)) {
+                throw new IllegalStateException("recursive?");
+            }
+            seen.add(chunk);
             Object ret = visitor.visit(chunk);
             if (null != ret) {
                 return ret;
             }
-            chunk = chunk.getNext(name);
-            if (chunk == first)
-                throw new IllegalStateException("recursive?");
+            Collection<Chunk> chunks = chunk.getNext(name);
+            chunk = visitor.selectPath(chunks);
         }
         return null;
     }
@@ -70,12 +78,18 @@ public class DagLayer implements Layer {
     @Override
     public Object walkBackwards(ChunkVisitor visitor) {
         Chunk chunk = last;
+        Collection<Chunk> seen = new HashSet<>();
         while (null != chunk) {
+            if (seen.contains(chunk)) {
+                throw new IllegalStateException("recursive?");
+            }
+            seen.add(chunk);
             Object ret = visitor.visit(chunk);
             if (null != ret) {
                 return ret;
             }
-            chunk = chunk.getPrevious(name);
+            Collection<Chunk> chunks = chunk.getNext(name);
+            chunk = visitor.selectPath(chunks);
         }
         return null;
     }
@@ -89,12 +103,12 @@ public class DagLayer implements Layer {
         }
 
         @Override
-        public Chunk getNext(String layerName) {
-            return first;
+        public Collection<Chunk> getNext(String layerName) {
+            return Arrays.asList(first);
         }
 
         @Override
-        public Chunk getPrevious(String layerName) {
+        public Collection<Chunk> getPrevious(String layerName) {
             return null;
         }
 
@@ -102,9 +116,11 @@ public class DagLayer implements Layer {
 
     private class ChunkIterator implements Iterator<Chunk> {
         private Chunk chunk;
+        private Chunk next;
 
         public ChunkIterator(Chunk chunk) {
             this.chunk = new HeaderChunk(chunk);
+            this.next = null;
         }
 
         @Override
@@ -112,16 +128,20 @@ public class DagLayer implements Layer {
             if (null == chunk) {
                 return false;
             }
-            Chunk next = chunk.getNext(name);
+            if (null != next) {
+                return true;
+            }
+            next = Utils.justPickOne(chunk.getNext(name));
             return null != next;
         }
 
         @Override
         public Chunk next() {
-            if (null == chunk) {
-                throw new IllegalStateException("Do not call next() after hasNext() returned false");
+            if (null == chunk || null == next) {
+                throw new IllegalStateException("Do not call next() without hasNext()");
             }
-            chunk = chunk.getNext(name);
+            chunk = next;
+            next = null;
             return chunk;
         }
     }

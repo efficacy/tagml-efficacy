@@ -62,7 +62,7 @@ public class DagFactory implements DocumentFactory {
             layers.put(layerName, layer);
         }
 
-        DagNode node = new DagNode(layer, tags, null, null);
+        DagNode node = new DagNode(layer, tags);
         log("Created new node " + node);
         return node;
     }

@@ -26,6 +26,13 @@ public class Utils {
         return result;
     }
 
+    public static <T> T justPickOne(Collection<T> collection) {
+        if (null == collection || collection.isEmpty()) {
+            return null;
+        }
+        return collection.iterator().next(); // ugly hack
+    }
+
     public static Object describe(Layer layer, boolean skipGlobal) {
         final StringBuilder ret = new StringBuilder();
         layer.walk(new ChunkVisitor() {
