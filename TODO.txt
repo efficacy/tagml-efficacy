@@ -5,6 +5,7 @@ Current
 
 Sooner
 ======
+visualise with dot
 tag pause/resume
 optional tags
 singleton tags
