@@ -21,14 +21,14 @@ class Link {
     public String to;
     public String colour;
     public String label;
-    public String style;
+    public String extra;
 
-    public Link(String from, String to, String colour, String label, String style) {
+    public Link(String from, String to, String colour, String label, String extra) {
         this.from = from;
         this.to = to;
         this.colour = colour;
         this.label = label;
-        this.style = style;
+        this.extra = extra;
     }
 
     public Link(String from, String to, String colour, String label) {
@@ -44,7 +44,7 @@ class Link {
         ret.append(from);
         ret.append(" -> ");
         ret.append(to);
-        if (null != colour || null != label | null != style) {
+        if (null != colour || null != label | null != extra) {
             boolean had = false;
             ret.append(" [");
             if (null != colour) {
@@ -64,13 +64,11 @@ class Link {
                 ret.append("\"");
                 had = true;
             }
-            if (null != style) {
+            if (null != extra) {
                 if (had) {
                     ret.append(";");
                 }
-                ret.append("style=\"");
-                ret.append(style);
-                ret.append("\"");
+                ret.append(extra);
                 had = true;
             }
             ret.append("]");
@@ -178,7 +176,7 @@ public class DotExport implements Export {
             StringBuilder nb = new StringBuilder();
             nb.append(" ");
             nb.append(boxId);
-            nb.append(" [shape=box;labelloc=t;label=\"");
+            nb.append(" [shape=box;labelloc=t;color=darkgray;label=\"");
             for (Node node : chunk.getLayers().values()) {
                 String layerName = node.getLayerName();
                 if (null == layerName) {
@@ -212,7 +210,7 @@ public class DotExport implements Export {
                     prev.put(layerName, id);
                 }
             }
-            links.add(new Link(id, boxId, "gray", null, "dashed"));
+            links.add(new Link(id, boxId, "darkgray", null, "arrowhead=none"));
 
             nb.append("\"]");
             writer.println(nb.toString());
