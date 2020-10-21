@@ -16,9 +16,7 @@ import export.Export;
 import test.helper.TestUtils;
 
 class ExportTest {
-    @Test
-    void testLayers() throws IOException {
-        String text = "Stuart[A|+f>John[B>Paul<A|f]George<B]Ringo";
+    private void generate(String text, String filename) throws IOException {
         Document doc = TestUtils.parse(text);
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         Export export = new DotExport(doc);
@@ -26,6 +24,16 @@ class ExportTest {
         String ret = buf.toString();
         assertFalse(ret.isEmpty());
         System.out.println(ret);
-        Files.writeString(Path.of("testout/et1.dot"), ret);
+        Files.writeString(Path.of(filename), ret);
+    }
+
+    @Test
+    void testWithoutRoot() throws IOException {
+        generate("Stuart[A|+f>John[B>Paul<A|f]George<B]Ringo", "testout/et1.dot");
+    }
+
+    @Test
+    void testWithRoot() throws IOException {
+        generate("[TAGML>Stuart[A|+f>John[B>Paul<A|f]George<B]Ringo<TAGML]", "testout/et2.dot");
     }
 }
