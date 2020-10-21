@@ -3,7 +3,6 @@ package test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
-import java.io.StringReader;
 
 import org.junit.jupiter.api.Test;
 
@@ -11,9 +10,7 @@ import com.efsol.tagml.lex.Lexer;
 import com.efsol.tagml.markup.Markup;
 import com.efsol.tagml.model.Chunk;
 import com.efsol.tagml.model.Document;
-import com.efsol.tagml.model.DocumentFactory;
 import com.efsol.tagml.model.Layer;
-import com.efsol.tagml.model.dag.DagFactory;
 import com.efsol.tagml.model.helper.SingleLayerFilter;
 import com.efsol.tagml.parser.ParseContext;
 import com.efsol.tagml.parser.ParseException;
@@ -39,21 +36,12 @@ public class ParserTest {
         return (Chunk) layer.walk(visitor);
     }
 
-    Document parse(String input) throws IOException {
-        DocumentFactory factory = new DagFactory();
-        Parser parser = new Parser(factory);
-        StringReader reader = new StringReader(input);
-        Document document = parser.parse(reader);
-//		System.out.println("parsed(" + input + ") to " + document);
-        return document;
-    }
-
     @Test
     void testEmpty() throws IOException {
         Lexer.verbose = false;
         Parser.verbose = false;
         ParseContext.verbose = false;
-        Document doc = parse("");
+        Document doc = TestUtils.parse("");
 
         assertNotNull(doc);
         TestUtils.assertNodeCount(0, doc);
@@ -61,7 +49,7 @@ public class ParserTest {
 
     @Test
     void testPlainTextGlobal() throws IOException {
-        Document doc = parse("John");
+        Document doc = TestUtils.parse("John");
 
         assertNotNull(doc);
         TestUtils.assertNodeCount(1, doc);
@@ -69,7 +57,7 @@ public class ParserTest {
 
     @Test
     void testStartEnd() throws IOException {
-        Document doc = parse("[A>John<A]");
+        Document doc = TestUtils.parse("[A>John<A]");
 
         assertNotNull(doc);
         Layer global = doc.getGlobalLayer();
@@ -89,7 +77,7 @@ public class ParserTest {
 
     @Test
     void testOverlap() throws IOException {
-        Document doc = parse("Stuart[A>John[B>Paul<A]George<B]Ringo");
+        Document doc = TestUtils.parse("Stuart[A>John[B>Paul<A]George<B]Ringo");
 
         assertNotNull(doc);
         Layer global = doc.getGlobalLayer();
@@ -104,7 +92,7 @@ public class ParserTest {
 
     @Test
     void testLayers() throws IOException {
-        Document doc = parse("Stuart[A|+f>John[B>Paul<A|f]George<B]Ringo");
+        Document doc = TestUtils.parse("Stuart[A|+f>John[B>Paul<A|f]George<B]Ringo");
 
         assertNotNull(doc);
         Layer global = doc.getGlobalLayer();
@@ -119,7 +107,7 @@ public class ParserTest {
 
     @Test
     void testEscape() throws IOException {
-        Document doc = parse("\\[A>John\\<A]");
+        Document doc = TestUtils.parse("\\[A>John\\<A]");
 
         assertNotNull(doc);
         Layer global = doc.getGlobalLayer();
@@ -130,7 +118,7 @@ public class ParserTest {
 
     @Test
     void testEscapeEscape() throws IOException {
-        Document doc = parse("[A>John\\\\<A]");
+        Document doc = TestUtils.parse("[A>John\\\\<A]");
 
         assertNotNull(doc);
         Layer global = doc.getGlobalLayer();
@@ -142,7 +130,7 @@ public class ParserTest {
     @Test
     void testUnmatchedCloseTag() throws IOException {
         try {
-            parse("John<A]");
+            TestUtils.parse("John<A]");
             fail("document with unmatched close tag shoudl throw");
         } catch (ParseException e) {
             // expected, do nothing
@@ -152,7 +140,7 @@ public class ParserTest {
     @Test
     void testUnmatchedOpenTag() throws IOException {
         try {
-            parse("[A>John");
+            TestUtils.parse("[A>John");
             fail("document with unmatched open tag shoudl throw");
         } catch (ParseException e) {
             // expected, do nothing
@@ -161,7 +149,7 @@ public class ParserTest {
 
     @Test
     void testMultipleLayersInTag() throws IOException {
-        Document doc = parse("[A|x,y>John<A|x,y]");
+        Document doc = TestUtils.parse("[A|x,y>John<A|x,y]");
 
         assertNotNull(doc);
         Layer global = doc.getGlobalLayer();
@@ -176,7 +164,7 @@ public class ParserTest {
 
     @Test
     void testIgnoreComment() throws IOException {
-        Document doc = parse("[A>John[!and not!]Paul<A]");
+        Document doc = TestUtils.parse("[A>John[!and not!]Paul<A]");
 
         assertPlainLayer("JohnPaul", doc, null);
         assertAnnotatedLayer("[A>JohnPaul<A]", doc, null);
