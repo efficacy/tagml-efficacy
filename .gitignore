@@ -1,1 +1,3 @@
 bin
+testout/*.dot
+testout/*.png
