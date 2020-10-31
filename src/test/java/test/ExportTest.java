@@ -10,8 +10,8 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 import com.efsol.tagml.model.Document;
+import com.efsol.tagml.model.dag.DotExport;
 
-import export.DotExport;
 import export.Export;
 import test.helper.TestUtils;
 
@@ -36,4 +36,10 @@ class ExportTest {
     void testWithRoot() throws IOException {
         generate("[TAGML>Stuart[A|+f>John[B>Paul<A|f]George<B]Ringo<TAGML]", "testout/et2.dot");
     }
+
+    @Test
+    void testDoubleOverlap() throws IOException {
+        generate("[A>[b>[c>[d>hello<b]<c]<d]<A]", "testout/et3.dot");
+    }
+
 }

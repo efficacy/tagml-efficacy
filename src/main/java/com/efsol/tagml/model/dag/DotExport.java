@@ -1,4 +1,4 @@
-package export;
+package com.efsol.tagml.model.dag;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -16,75 +16,9 @@ import com.efsol.tagml.model.Layer;
 import com.efsol.tagml.model.Node;
 import com.efsol.tagml.model.Tag;
 
-class Link {
-    public String from;
-    public String to;
-    public String colour;
-    public String label;
-    public String extra;
-
-    public Link(String from, String to, String colour, String label, String extra) {
-        this.from = from;
-        this.to = to;
-        this.colour = colour;
-        this.label = label;
-        this.extra = extra;
-    }
-
-    public Link(String from, String to, String colour, String label) {
-        this(from, to, colour, label, null);
-    }
-
-    public Link(String from, String to) {
-        this(from, to, null, null, null);
-    }
-
-    public String draw() {
-        StringBuilder ret = new StringBuilder();
-        ret.append(from);
-        ret.append(" -> ");
-        ret.append(to);
-        if (null != colour || null != label | null != extra) {
-            boolean had = false;
-            ret.append(" [");
-            if (null != colour) {
-                if (had) {
-                    ret.append(";");
-                }
-                ret.append("color=");
-                ret.append(colour);
-                had = true;
-            }
-            if (null != label) {
-                if (had) {
-                    ret.append(";");
-                }
-                ret.append("label=\"");
-                ret.append(label);
-                ret.append("\"");
-                had = true;
-            }
-            if (null != extra) {
-                if (had) {
-                    ret.append(";");
-                }
-                ret.append(extra);
-                had = true;
-            }
-            ret.append("]");
-        }
-        return ret.toString();
-    }
-}
-
-class ColourSource {
-    private String[] colours = { "red", "orange", "yellow", "green", "blue" };
-    private int next = 0;
-
-    public String nextColour() {
-        return colours[next++];
-    }
-}
+import export.Export;
+import export.dot.ColourSource;
+import export.dot.Link;
 
 class NodeFinder {
     private Map<String, String> index;
@@ -154,7 +88,6 @@ public class DotExport implements Export {
 
         NodeFinder prev = new NodeFinder("start");
 
-//        links.add(new Link(prev.lookup(Layer.BASE_LAYER_NAME), chunkId(chunks.get(0)), layerColours.get(Layer.BASE_LAYER_NAME), Layer.BASE_LAYER_NAME));
         for (Chunk chunk : chunks) {
             String id = chunkId(chunk);
             links.add(new Link(prev.lookup(Layer.GLOBAL_LAYER_NAME), id, layerColours.get(Layer.GLOBAL_LAYER_NAME), null));
@@ -176,7 +109,8 @@ public class DotExport implements Export {
             StringBuilder nb = new StringBuilder();
             nb.append(" ");
             nb.append(boxId);
-            nb.append(" [shape=box;labelloc=t;color=darkgray;label=\"");
+            nb.append(" [shape=box;labelloc=t;color=darkgray;label=<<table border='0' cellborder='0' cellspacing='0'>");
+            int nlayers = 0;
             for (Node node : chunk.getLayers().values()) {
                 String layerName = node.getLayerName();
                 if (null == layerName) {
@@ -185,18 +119,20 @@ public class DotExport implements Export {
 
                 Collection<Tag> tags = node.getTags();
                 if (!tags.isEmpty()) {
+                    nb.append("<tr><td align='right'><b>");
                     nb.append(layerName);
-                    nb.append(": ");
+                    nb.append("</b>:</td><td align='left'>");
 
                     boolean hadTag = false;
                     for (Tag tag : tags) {
                         if (hadTag) {
-                            nb.append(",");
+                            nb.append(", ");
                         }
                         nb.append(tag.name);
                         hadTag = true;
                     }
-                    nb.append("\\l");
+                    nb.append("</td></tr>");
+                    ++nlayers;
                 }
 
                 if (!Layer.GLOBAL_LAYER_NAME.equals(layerName)) {
@@ -212,7 +148,10 @@ public class DotExport implements Export {
             }
             links.add(new Link(id, boxId, "darkgray", null, "arrowhead=none"));
 
-            nb.append("\"]");
+            if (0 == nlayers) {
+                nb.append("<tr><td>&nbsp;</td></tr>");
+            }
+            nb.append("</table>>]");
             writer.println(nb.toString());
         }
         for (Link link : links) {
