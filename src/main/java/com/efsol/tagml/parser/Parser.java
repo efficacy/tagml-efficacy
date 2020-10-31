@@ -8,7 +8,6 @@ import com.efsol.tagml.lex.Lexer;
 import com.efsol.tagml.lex.OpenToken;
 import com.efsol.tagml.lex.TextToken;
 import com.efsol.tagml.lex.Token;
-import com.efsol.tagml.model.Chunk;
 import com.efsol.tagml.model.Document;
 import com.efsol.tagml.model.DocumentFactory;
 
@@ -22,14 +21,14 @@ public class Parser {
 
     public Document parse(Reader input) throws IOException {
         Lexer lexer = new Lexer(input);
-        parse(lexer);
+        ParseContext context = factory.createContext();
+        parse(lexer, context);
         Document ret = factory.createDocument();
         return ret;
     }
 
-    public void parse(Lexer lexer) throws IOException {
+    public void parse(Lexer lexer, ParseContext context) throws IOException {
         factory.reset();
-        ParseContext context = new ParseContext(factory);
 
         for (;;) {
             Token token = lexer.next();
@@ -41,9 +40,7 @@ public class Parser {
             switch (token.getType()) {
             case TEXT:
                 log("Parser: it's a text token: " + token);
-                context.append(((TextToken) token).getText());
-                context.setPosition(token.getPosition());
-                factory.addChunk(context.swap());
+                context.addText(((TextToken) token).getText(), token.getPosition());
                 break;
             case OPEN:
                 log("Parser: it's an open token: " + token);
@@ -68,12 +65,7 @@ public class Parser {
             }
         }
 
-        if (context.isIncomplete()) {
-            log("at end, buffer is incomplete");
-            Chunk chunk = context.swap();
-            log("completed incomplete chunk: " + chunk);
-            factory.addChunk(chunk);
-        }
+        context.tail();
 
         context.enforceConsistency();
     }

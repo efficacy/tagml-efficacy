@@ -11,6 +11,7 @@ import com.efsol.tagml.model.Layer;
 import com.efsol.tagml.model.Node;
 import com.efsol.tagml.model.Position;
 import com.efsol.tagml.model.Tag;
+import com.efsol.tagml.parser.ParseContext;
 import com.efsol.util.Utils;
 
 public class DagFactory implements DocumentFactory {
@@ -99,5 +100,10 @@ public class DagFactory implements DocumentFactory {
     void log(String s) {
         if (verbose)
             System.out.println("DagFactory::" + s);
+    }
+
+    @Override
+    public ParseContext createContext() {
+        return new DagContext(this);
     }
 }

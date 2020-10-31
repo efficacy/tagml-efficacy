@@ -40,7 +40,7 @@ public class ParserTest {
     void testEmpty() throws IOException {
         Lexer.verbose = false;
         Parser.verbose = false;
-        ParseContext.verbose = false;
+//        ParseContext.verbose = false;
         Document doc = TestUtils.parse("");
 
         assertNotNull(doc);

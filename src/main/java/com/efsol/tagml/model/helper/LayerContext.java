@@ -1,4 +1,4 @@
-package com.efsol.tagml.parser;
+package com.efsol.tagml.model.helper;
 
 import java.util.Collection;
 import java.util.LinkedList;
